@@ -1,0 +1,14 @@
+[package]
+name = "td-tui"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "td"
+path = "src/main.rs"
+
+[dependencies]
+crossterm = "0.25"
+td-lib = { path = "../td-lib" }
+tui = "0.19"
+tui-input = "0.6"
