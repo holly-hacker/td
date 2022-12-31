@@ -5,7 +5,6 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use std::{error::Error, path::Path};
-use td_lib::database::{Database, DatabaseInfo};
 use tui::{backend::CrosstermBackend, Terminal};
 use ui::App;
 
@@ -21,29 +20,14 @@ fn main() {
 
     let path = Path::new(&args[0]);
 
-    let database: Result<Database, _> = if !path.exists() {
-        println!("The given database file ({path:?}) does not exist, creating a new one.");
+    let app = App::create(path).unwrap();
 
-        let db_info = DatabaseInfo::default();
-        db_info.write(path).and_then(|_| db_info.try_into())
-    } else {
-        DatabaseInfo::read(path).and_then(|info| info.try_into())
-    };
-
-    match database {
-        Ok(database) => {
-            let err = run_app(database);
-            if let Err(err) = err {
-                println!("Error while running app: {err}");
-            }
-        }
-        Err(err) => {
-            println!("Error while reading database: {err}");
-        }
+    if let Err(e) = run_app(app) {
+        println!("Error while running app: {e}");
     }
 }
 
-fn run_app(database: Database) -> Result<(), Box<dyn Error>> {
+fn run_app(mut app: App) -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
     let mut stdout = std::io::stdout();
 
@@ -52,8 +36,7 @@ fn run_app(database: Database) -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App { database };
-    app.run(&mut terminal)?;
+    app.run_loop(&mut terminal)?;
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
