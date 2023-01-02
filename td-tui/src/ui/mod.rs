@@ -1,4 +1,4 @@
-use std::{error::Error, io::Stdout, path::Path};
+use std::{error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use td_lib::{
@@ -13,24 +13,25 @@ use tui::{
     Frame, Terminal,
 };
 
-pub struct App {
+pub struct AppState {
     pub database: Database,
+    pub path: PathBuf,
 }
-impl App {
-    pub fn create(path: &Path) -> Result<Self, DatabaseReadError> {
+impl AppState {
+    pub fn create(path: PathBuf) -> Result<Self, DatabaseReadError> {
         let db_info = if !path.exists() {
             println!("The given database file ({path:?}) does not exist, creating a new one.");
 
             let db_info = DatabaseInfo::default();
-            db_info.write(path)?;
+            db_info.write(&path)?;
             db_info
         } else {
-            DatabaseInfo::read(path)?
+            DatabaseInfo::read(&path)?
         };
 
         let database = db_info.try_into()?;
 
-        Ok(Self { database })
+        Ok(Self { database, path })
     }
 
     pub fn run_loop(
@@ -46,11 +47,10 @@ impl App {
         };
 
         loop {
-            terminal.draw(|f| root_component.render(f, f.size(), &self.database))?;
+            terminal.draw(|f| root_component.render(f, f.size(), self))?;
 
             if let Event::Key(key) = event::read()? {
-                let handled = root_component.update(key, &mut self.database);
-
+                let handled = root_component.update(key, self);
                 if !handled {
                     match key.code {
                         KeyCode::Char('q') => break,
@@ -69,11 +69,11 @@ impl App {
 
 trait Component {
     /// Render the component and its children to the given area.
-    fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &Database);
+    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState);
 
     /// Update state based in a key event. Returns whether the key event is handled by this
     /// component or one of its children.
-    fn update(&mut self, key: KeyEvent, state: &mut Database) -> bool;
+    fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool;
 }
 
 struct BasicTaskList {
@@ -82,7 +82,7 @@ struct BasicTaskList {
 }
 
 impl Component for BasicTaskList {
-    fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &Database) {
+    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
         // render the list
         let block = Block::default()
             .title("Basic Task List")
@@ -92,6 +92,7 @@ impl Component for BasicTaskList {
             .style(Style::default().bg(Color::Black));
 
         let list_items = state
+            .database
             .items
             .iter()
             .map(|t| ListItem::new(t.as_str()))
@@ -106,19 +107,19 @@ impl Component for BasicTaskList {
             )
             .style(Style::default().fg(Color::DarkGray));
         let mut list_state = ListState::default();
-        list_state.select(if state.items.is_empty() {
+        list_state.select(if state.database.items.is_empty() {
             None
         } else {
             Some(self.index)
         });
-        f.render_stateful_widget(list, area, &mut list_state);
+        frame.render_stateful_widget(list, area, &mut list_state);
 
         // if needed, render the popup
-        self.task_popup.render(f, area, state);
+        self.task_popup.render(frame, area, state);
     }
 
-    fn update(&mut self, key: KeyEvent, state: &mut Database) -> bool {
-        self.index = self.index.clamp(0, state.items.len() - 1);
+    fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
+        self.index = self.index.clamp(0, state.database.items.len() - 1);
 
         if self.task_popup.update(key, state) {
             return true;
@@ -129,8 +130,11 @@ impl Component for BasicTaskList {
             match key.code {
                 KeyCode::Enter => {
                     if let Some(text) = self.task_popup.text.take() {
-                        state.items.push(text);
-                        // TODO: save state
+                        state.database.items.push(text);
+                        let db_info: DatabaseInfo = (&state.database).into();
+
+                        // TODO: error handling. show popup on failure to save?
+                        db_info.write(&state.path).unwrap();
                     }
                     true
                 }
@@ -153,7 +157,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 KeyCode::Down => {
-                    if self.index != state.items.len() - 1 {
+                    if self.index != state.database.items.len() - 1 {
                         self.index += 1;
                     }
                     true
@@ -170,7 +174,7 @@ struct BasicInputPopup {
 }
 
 impl Component for BasicInputPopup {
-    fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, _state: &Database) {
+    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, _state: &AppState) {
         let Some(text) = &self.text else {return;};
 
         let popup_area_vertical = Layout::default()
@@ -188,16 +192,16 @@ impl Component for BasicInputPopup {
             3,
         );
 
-        f.render_widget(Clear, popup_area);
+        frame.render_widget(Clear, popup_area);
 
         let block = Block::default()
             .title(self.title.clone())
             .borders(Borders::ALL);
         let paragraph = Paragraph::new(text.clone()).block(block);
-        f.render_widget(paragraph, popup_area);
+        frame.render_widget(paragraph, popup_area);
     }
 
-    fn update(&mut self, key: KeyEvent, _state: &mut Database) -> bool {
+    fn update(&mut self, key: KeyEvent, _state: &mut AppState) -> bool {
         let Some(text) = &mut self.text else {return false;};
 
         // TODO: use tui-input

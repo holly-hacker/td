@@ -4,9 +4,9 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::{error::Error, path::Path};
+use std::{error::Error, path::PathBuf};
 use tui::{backend::CrosstermBackend, Terminal};
-use ui::App;
+use ui::AppState;
 
 fn main() {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
@@ -18,16 +18,15 @@ fn main() {
         return;
     }
 
-    let path = Path::new(&args[0]);
-
-    let app = App::create(path).unwrap();
+    let path = PathBuf::from(&args[0]);
+    let app = AppState::create(path).unwrap();
 
     if let Err(e) = run_app(app) {
         println!("Error while running app: {e}");
     }
 }
 
-fn run_app(mut app: App) -> Result<(), Box<dyn Error>> {
+fn run_app(mut app: AppState) -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
     let mut stdout = std::io::stdout();
 

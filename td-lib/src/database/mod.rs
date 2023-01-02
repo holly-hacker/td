@@ -53,6 +53,15 @@ impl TryInto<Database> for DatabaseInfo {
     }
 }
 
+impl From<&Database> for DatabaseInfo {
+    fn from(value: &Database) -> Self {
+        Self {
+            version: Database::VERSION,
+            data: serde_json::to_value(value).expect("Failed to serialize"),
+        }
+    }
+}
+
 trait DatabaseImpl: Default + Serialize + DeserializeOwned {
     const VERSION: u8;
 }
