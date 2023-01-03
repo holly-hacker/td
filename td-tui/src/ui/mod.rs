@@ -7,11 +7,15 @@ use td_lib::{
 };
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::Rect,
     style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState},
     Frame, Terminal,
 };
+
+use self::modal::BasicInputPopup;
+
+mod modal;
 
 pub struct AppState {
     pub database: Database,
@@ -40,10 +44,7 @@ impl AppState {
     ) -> Result<(), Box<dyn Error>> {
         let mut root_component = BasicTaskList {
             index: 0,
-            task_popup: BasicInputPopup {
-                text: None,
-                title: "Enter new task".into(),
-            },
+            task_popup: BasicInputPopup::new("Enter new task".to_string()),
         };
 
         loop {
@@ -53,7 +54,8 @@ impl AppState {
                 let handled = root_component.update(key, self);
                 if !handled {
                     match key.code {
-                        KeyCode::Char('q') => break,
+                        KeyCode::Char('q') | KeyCode::Esc => break,
+                        // KeyCode::Char('q') => break,
                         KeyCode::Char('s') => {
                             // todo: save
                         }
@@ -130,11 +132,11 @@ impl Component for BasicTaskList {
             self.index = self.index.clamp(0, task_indices.len() - 1);
         }
 
-        if self.task_popup.text.is_some() {
+        if self.task_popup.is_open() {
             // popup is open
             match key.code {
                 KeyCode::Enter => {
-                    if let Some(text) = self.task_popup.text.take() {
+                    if let Some(text) = self.task_popup.close() {
                         let task = Task {
                             title: text,
                             time_created: SystemTime::now(),
@@ -147,16 +149,12 @@ impl Component for BasicTaskList {
                     }
                     true
                 }
-                KeyCode::Esc => {
-                    self.task_popup.text = None;
-                    true
-                }
                 _ => false,
             }
         } else {
             match key.code {
                 KeyCode::Char('c') => {
-                    self.task_popup.text = Some(String::new());
+                    self.task_popup.open();
                     true
                 }
                 KeyCode::Char('d') if !task_indices.is_empty() => {
@@ -182,53 +180,6 @@ impl Component for BasicTaskList {
                 }
                 _ => false,
             }
-        }
-    }
-}
-
-struct BasicInputPopup {
-    title: String,
-    text: Option<String>,
-}
-
-impl Component for BasicInputPopup {
-    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, _state: &AppState) {
-        let Some(text) = &self.text else {return;};
-
-        let popup_area_vertical = Layout::default()
-            .constraints([
-                Constraint::Percentage(25),
-                Constraint::Percentage(50),
-                Constraint::Percentage(25),
-            ])
-            .direction(Direction::Horizontal)
-            .split(area)[1];
-        let popup_area = Rect::new(
-            popup_area_vertical.x,
-            popup_area_vertical.height / 2 - 2,
-            popup_area_vertical.width,
-            3,
-        );
-
-        frame.render_widget(Clear, popup_area);
-
-        let block = Block::default()
-            .title(self.title.clone())
-            .borders(Borders::ALL);
-        let paragraph = Paragraph::new(text.clone()).block(block);
-        frame.render_widget(paragraph, popup_area);
-    }
-
-    fn update(&mut self, key: KeyEvent, _state: &mut AppState) -> bool {
-        let Some(text) = &mut self.text else {return false;};
-
-        // TODO: use tui-input
-        match key.code {
-            KeyCode::Char(c) => {
-                text.push(c);
-                true
-            }
-            _ => false,
         }
     }
 }
