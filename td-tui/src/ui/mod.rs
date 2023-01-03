@@ -1,8 +1,8 @@
-use std::{error::Error, io::Stdout, path::PathBuf};
+use std::{error::Error, io::Stdout, path::PathBuf, time::SystemTime};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use td_lib::{
-    database::{Database, DatabaseInfo},
+    database::{Database, DatabaseInfo, Task},
     errors::DatabaseReadError,
 };
 use tui::{
@@ -83,6 +83,9 @@ struct BasicTaskList {
 
 impl Component for BasicTaskList {
     fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
+        let mut tasks = state.database.tasks.node_weights().collect::<Vec<_>>();
+        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
+
         // render the list
         let block = Block::default()
             .title("Basic Task List")
@@ -91,11 +94,9 @@ impl Component for BasicTaskList {
             .border_type(BorderType::Rounded)
             .style(Style::default().bg(Color::Black));
 
-        let list_items = state
-            .database
-            .items
+        let list_items = tasks
             .iter()
-            .map(|t| ListItem::new(t.as_str()))
+            .map(|t| ListItem::new(t.title.clone()))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
             .block(block)
@@ -107,7 +108,7 @@ impl Component for BasicTaskList {
             )
             .style(Style::default().fg(Color::DarkGray));
         let mut list_state = ListState::default();
-        list_state.select(if state.database.items.is_empty() {
+        list_state.select(if tasks.is_empty() {
             None
         } else {
             Some(self.index)
@@ -119,10 +120,14 @@ impl Component for BasicTaskList {
     }
 
     fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
-        self.index = self.index.clamp(0, state.database.items.len() - 1);
-
         if self.task_popup.update(key, state) {
             return true;
+        }
+
+        let task_indices = state.database.tasks.node_indices().collect::<Vec<_>>();
+
+        if !task_indices.is_empty() {
+            self.index = self.index.clamp(0, task_indices.len() - 1);
         }
 
         if self.task_popup.text.is_some() {
@@ -130,10 +135,14 @@ impl Component for BasicTaskList {
             match key.code {
                 KeyCode::Enter => {
                     if let Some(text) = self.task_popup.text.take() {
-                        state.database.items.push(text);
-                        let db_info: DatabaseInfo = (&state.database).into();
+                        let task = Task {
+                            title: text,
+                            time_created: SystemTime::now(),
+                        };
+                        state.database.tasks.add_node(task);
 
                         // TODO: error handling. show popup on failure to save?
+                        let db_info: DatabaseInfo = (&state.database).into();
                         db_info.write(&state.path).unwrap();
                     }
                     true
@@ -150,6 +159,15 @@ impl Component for BasicTaskList {
                     self.task_popup.text = Some(String::new());
                     true
                 }
+                KeyCode::Char('d') if !task_indices.is_empty() => {
+                    state.database.tasks.remove_node(task_indices[self.index]);
+
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
+
+                    true
+                }
                 KeyCode::Up => {
                     if self.index != 0 {
                         self.index -= 1;
@@ -157,7 +175,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 KeyCode::Down => {
-                    if self.index != state.database.items.len() - 1 {
+                    if self.index != task_indices.len() - 1 {
                         self.index += 1;
                     }
                     true
