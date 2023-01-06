@@ -3,7 +3,6 @@ pub mod v1;
 use std::path::Path;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
 // NOTE: this import should import the current version of the database schema
 pub use v1::*;
 

@@ -6,9 +6,8 @@ use tui::{
     widgets::Tabs,
 };
 
-use crate::utils::RectExt;
-
 use super::Component;
+use crate::utils::RectExt;
 
 pub struct TabLayout {
     items: Vec<Box<dyn Component>>,

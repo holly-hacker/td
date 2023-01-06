@@ -1,11 +1,12 @@
 mod ui;
 mod utils;
 
+use std::{error::Error, path::PathBuf};
+
 use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::{error::Error, path::PathBuf};
 use tui::{backend::CrosstermBackend, Terminal};
 use ui::AppState;
 
