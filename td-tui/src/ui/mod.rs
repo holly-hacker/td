@@ -13,7 +13,7 @@ use tui::{
     Frame, Terminal,
 };
 
-use self::{modal::BasicInputPopup, tab_layout::TabLayout};
+use self::{modal::text_input::TextInputModal, tab_layout::TabLayout};
 
 mod modal;
 mod tab_layout;
@@ -113,7 +113,7 @@ impl Component for LayoutRoot {
 
 struct BasicTaskList {
     index: usize,
-    task_popup: BasicInputPopup,
+    task_popup: TextInputModal,
     reverse: bool,
 }
 
@@ -121,7 +121,7 @@ impl BasicTaskList {
     fn new(reverse: bool) -> Self {
         Self {
             index: 0,
-            task_popup: BasicInputPopup::new("Enter new task".to_string()),
+            task_popup: TextInputModal::new("Enter new task".to_string()),
             reverse,
         }
     }

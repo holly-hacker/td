@@ -9,21 +9,18 @@ use tui::{
 };
 use tui_input::{Input, InputRequest};
 
-use super::{AppState, Component};
+use crate::ui::{AppState, Component};
 
 const MIN_WIDTH: usize = 16;
 
-pub struct BasicInputPopup {
+pub struct TextInputModal {
     title: String,
     input: Option<Input>,
 }
 
-impl BasicInputPopup {
-    pub fn new(arg: String) -> BasicInputPopup {
-        Self {
-            title: arg,
-            input: None,
-        }
+impl TextInputModal {
+    pub fn new(title: String) -> TextInputModal {
+        Self { title, input: None }
     }
 
     pub fn is_open(&self) -> bool {
@@ -39,7 +36,7 @@ impl BasicInputPopup {
     }
 }
 
-impl Component for BasicInputPopup {
+impl Component for TextInputModal {
     fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, _state: &AppState) {
         let Some(text) = &self.input else {return;};
 
