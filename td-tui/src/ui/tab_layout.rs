@@ -1,12 +1,10 @@
 use crossterm::event::KeyCode;
-use tui::{
-    style::{Color, Style},
-    symbols,
-    text::Spans,
-    widgets::Tabs,
-};
+use tui::{symbols, text::Spans, widgets::Tabs};
 
-use super::Component;
+use super::{
+    constants::{TAB_HIGHLIGHT_STYLE, TAB_STYLE},
+    Component,
+};
 use crate::utils::RectExt;
 
 pub struct TabLayout {
@@ -45,8 +43,8 @@ impl Component for TabLayout {
             .collect();
         let tabs = Tabs::new(titles)
             .select(self.index)
-            .style(Style::default().fg(Color::DarkGray))
-            .highlight_style(Style::default().fg(Color::White))
+            .style(TAB_STYLE)
+            .highlight_style(TAB_HIGHLIGHT_STYLE)
             .divider(symbols::DOT);
 
         frame.render_widget(tabs, area_tabs);

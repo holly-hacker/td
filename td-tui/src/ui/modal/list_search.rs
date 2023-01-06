@@ -1,15 +1,14 @@
 use crossterm::event::{KeyCode, KeyModifiers};
-use tui::{
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState},
-};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState};
 
 use crate::{
-    ui::{input::TextBoxComponent, Component},
+    ui::{
+        constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, MIN_MODAL_WIDTH},
+        input::TextBoxComponent,
+        Component,
+    },
     utils::RectExt,
 };
-
-const MIN_WIDTH: u16 = 32; // TODO: to central place
 
 pub struct ListSearchModal {
     title: String,
@@ -70,20 +69,14 @@ impl Component for ListSearchModal {
         let filtered_items = self.get_seach_results().collect::<Vec<_>>();
 
         let (list, mut list_state) = {
-            // TODO: store styles in central location
             let list = List::new(
                 filtered_items
                     .iter()
                     .map(|item| ListItem::new((*item).clone()))
                     .collect::<Vec<_>>(),
             )
-            .style(Style::default().fg(Color::DarkGray))
-            .highlight_style(
-                Style::default()
-                    .bg(Color::Blue)
-                    .fg(Color::Black)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .style(LIST_STYLE)
+            .highlight_style(LIST_HIGHLIGHT_STYLE);
 
             let mut list_state = ListState::default();
             list_state.select((!items.is_empty()).then_some(self.index));
@@ -93,7 +86,7 @@ impl Component for ListSearchModal {
 
         let height_list = 10;
         let block_height = height_list + TextBoxComponent::HEIGHT + 2;
-        let block_width = MIN_WIDTH
+        let block_width = MIN_MODAL_WIDTH
             .max(self.search_box.text().len() as u16 + 1)
             .max(self.title.len() as u16)
             + 2;

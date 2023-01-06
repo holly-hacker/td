@@ -1,11 +1,11 @@
 use crossterm::event::{KeyCode, KeyModifiers};
-use tui::{
-    style::{Color, Modifier, Style},
-    widgets::Paragraph,
-};
+use tui::widgets::Paragraph;
 use tui_input::{Input, InputRequest};
 
-use super::Component;
+use super::{
+    constants::{TEXTBOX_STYLE, TEXTBOX_STYLE_BG},
+    Component,
+};
 
 pub struct TextBoxComponent {
     input: Input,
@@ -53,14 +53,11 @@ impl Component for TextBoxComponent {
         area: tui::layout::Rect,
         _state: &super::AppState,
     ) {
-        let mut paragraph = Paragraph::new(self.input.to_string());
-        if self.has_background {
-            paragraph = paragraph.style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
-        }
+        let paragraph = Paragraph::new(self.input.to_string()).style(if self.has_background {
+            TEXTBOX_STYLE_BG
+        } else {
+            TEXTBOX_STYLE
+        });
         frame.render_widget(paragraph, area);
 
         // TODO: cursor seems to flash and move around. show this differently? maybe put the cursor

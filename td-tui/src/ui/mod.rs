@@ -8,16 +8,17 @@ use td_lib::{
 use tui::{
     backend::CrosstermBackend,
     layout::Rect,
-    style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders, List, ListItem, ListState},
     Frame, Terminal,
 };
 
 use self::{
+    constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
     modal::{list_search::ListSearchModal, text_input::TextInputModal},
     tab_layout::TabLayout,
 };
 
+mod constants;
 mod input;
 mod modal;
 mod tab_layout;
@@ -150,9 +151,8 @@ impl Component for BasicTaskList {
                 "Basic Task List (reversed)"
             })
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::White))
-            .border_type(BorderType::Rounded)
-            .style(Style::default().bg(Color::Black));
+            .border_style(STANDARD_STYLE_FG_WHITE)
+            .border_type(BorderType::Rounded);
 
         let list_items = tasks
             .iter()
@@ -160,13 +160,8 @@ impl Component for BasicTaskList {
             .collect::<Vec<_>>();
         let list = List::new(list_items)
             .block(block)
-            .highlight_style(
-                Style::default()
-                    .bg(Color::Blue)
-                    .fg(Color::Black)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .style(Style::default().fg(Color::DarkGray));
+            .highlight_style(LIST_HIGHLIGHT_STYLE)
+            .style(LIST_STYLE);
         let mut list_state = ListState::default();
         list_state.select((!tasks.is_empty()).then_some(self.index));
         frame.render_stateful_widget(list, area, &mut list_state);

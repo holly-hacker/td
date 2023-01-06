@@ -9,11 +9,9 @@ use tui::{
 };
 
 use crate::{
-    ui::{input::TextBoxComponent, AppState, Component},
+    ui::{constants::MIN_MODAL_WIDTH, input::TextBoxComponent, AppState, Component},
     utils::RectExt,
 };
-
-const MIN_WIDTH: u16 = 32; // TODO: to central place
 
 pub struct TextInputModal {
     title: String,
@@ -47,7 +45,7 @@ impl Component for TextInputModal {
             .borders(Borders::ALL);
 
         // put the block in the center of the area
-        let block_width = MIN_WIDTH
+        let block_width = MIN_MODAL_WIDTH
             .max(textbox.text().len() as u16 + 1)
             .max(self.title.len() as u16)
             + 2;
