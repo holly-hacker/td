@@ -4,6 +4,7 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
     database::{Database, DatabaseInfo, Task},
     errors::DatabaseReadError,
+    petgraph::graph::NodeIndex,
 };
 use tui::{
     backend::CrosstermBackend,
@@ -132,16 +133,36 @@ impl BasicTaskList {
             reverse,
         }
     }
+
+    fn get_task_list<'state>(&self, state: &'state AppState) -> Vec<(NodeIndex, &'state Task)> {
+        let mut tasks = state
+            .database
+            .tasks
+            .node_indices()
+            .map(|i| {
+                (
+                    i,
+                    state
+                        .database
+                        .tasks
+                        .node_weight(i)
+                        .expect("should find weight for NodeIndex"),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        tasks.sort_by(|a, b| a.1.time_created.cmp(&b.1.time_created));
+        if self.reverse {
+            tasks.reverse();
+        }
+
+        tasks
+    }
 }
 
 impl Component for BasicTaskList {
     fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
-        let mut tasks = state.database.tasks.node_weights().collect::<Vec<_>>();
-
-        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
-        if self.reverse {
-            tasks.reverse();
-        }
+        let tasks = self.get_task_list(state);
 
         // render the list
         let block = Block::default()
@@ -156,7 +177,7 @@ impl Component for BasicTaskList {
 
         let list_items = tasks
             .iter()
-            .map(|t| ListItem::new(t.title.clone()))
+            .map(|t| ListItem::new(t.1.title.clone()))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
             .block(block)
@@ -179,10 +200,10 @@ impl Component for BasicTaskList {
             return true;
         }
 
-        let task_indices = state.database.tasks.node_indices().collect::<Vec<_>>();
+        let tasks = self.get_task_list(state);
 
-        if !task_indices.is_empty() {
-            self.index = self.index.clamp(0, task_indices.len() - 1);
+        if !tasks.is_empty() {
+            self.index = self.index.clamp(0, tasks.len() - 1);
         }
 
         if self.task_popup.is_open() {
@@ -214,14 +235,14 @@ impl Component for BasicTaskList {
                 _ => false,
             }
         } else {
-            match key.code {
-                KeyCode::Char('c') if key.modifiers.is_empty() => {
+            match (key.code, key.modifiers) {
+                (KeyCode::Char('c'), KeyModifiers::NONE) => {
                     self.task_popup.open();
                     true
                 }
-                KeyCode::Char('d') if key.modifiers.is_empty() && !task_indices.is_empty() => {
-                    // TODO: this is bugged! does not take sort into account
-                    state.database.tasks.remove_node(task_indices[self.index]);
+                (KeyCode::Char('d'), KeyModifiers::NONE) if !tasks.is_empty() => {
+                    // delete
+                    state.database.tasks.remove_node(tasks[self.index].0);
 
                     // TODO: error handling. show popup on failure to save?
                     let db_info: DatabaseInfo = (&state.database).into();
@@ -229,22 +250,18 @@ impl Component for BasicTaskList {
 
                     true
                 }
-                KeyCode::Char('s') if key.modifiers.is_empty() => {
-                    self.search_box.open(
-                        task_indices
-                            .iter()
-                            .filter_map(|i| state.database.tasks.node_weight(*i))
-                            .map(|w| w.title.clone())
-                            .collect(),
-                    );
+                (KeyCode::Char('s'), KeyModifiers::NONE) => {
+                    // save
+                    self.search_box
+                        .open(tasks.iter().map(|w| w.1.title.clone()).collect());
                     true
                 }
-                KeyCode::Up => {
+                (KeyCode::Up, KeyModifiers::NONE) => {
                     self.index = self.index.saturating_sub(1);
                     true
                 }
-                KeyCode::Down => {
-                    if self.index != task_indices.len() - 1 {
+                (KeyCode::Down, KeyModifiers::NONE) => {
+                    if self.index != tasks.len() - 1 {
                         self.index += 1;
                     }
                     true
