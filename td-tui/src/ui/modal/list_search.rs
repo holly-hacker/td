@@ -10,14 +10,14 @@ use crate::{
     utils::RectExt,
 };
 
-pub struct ListSearchModal {
+pub struct ListSearchModal<TKey: Eq + Clone> {
     title: String,
-    items: Option<Vec<String>>,
+    items: Option<Vec<(TKey, String)>>,
     search_box: TextBoxComponent,
     index: usize,
 }
 
-impl ListSearchModal {
+impl<TKey: Eq + Clone> ListSearchModal<TKey> {
     pub fn new(title: String) -> Self {
         Self {
             title,
@@ -31,29 +31,31 @@ impl ListSearchModal {
         self.items.is_some()
     }
 
-    pub fn open(&mut self, items: Vec<String>) {
+    pub fn open(&mut self, items: Vec<(TKey, String)>) {
         self.items = Some(items);
         self.search_box = TextBoxComponent::new_focused().with_background(true);
         self.index = 0;
     }
 
-    pub fn close(&mut self) -> Option<String> {
-        self.get_seach_results().nth(self.index).cloned()
+    pub fn close(&mut self) -> Option<TKey> {
+        let ret = self.get_seach_results().nth(self.index).cloned();
+        self.items = None;
+        ret.map(|x| x.0)
     }
 
-    fn get_seach_results(&self) -> Box<dyn Iterator<Item = &String> + '_> {
+    fn get_seach_results(&self) -> Box<dyn Iterator<Item = &(TKey, String)> + '_> {
         let search_query = self.search_box.text().to_lowercase();
         match &self.items {
             Some(x) => Box::new(
                 x.iter()
-                    .filter(move |x| x.to_lowercase().contains(&search_query)),
+                    .filter(move |(_, x)| x.to_lowercase().contains(&search_query)),
             ),
             None => Box::new([].into_iter()),
         }
     }
 }
 
-impl Component for ListSearchModal {
+impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
@@ -72,7 +74,7 @@ impl Component for ListSearchModal {
             let list = List::new(
                 filtered_items
                     .iter()
-                    .map(|item| ListItem::new((*item).clone()))
+                    .map(|item| ListItem::new(item.1.clone()))
                     .collect::<Vec<_>>(),
             )
             .style(LIST_STYLE)
@@ -112,6 +114,12 @@ impl Component for ListSearchModal {
     }
 
     fn update(&mut self, key: crossterm::event::KeyEvent, state: &mut crate::ui::AppState) -> bool {
+        // always close with Esc
+        if self.is_open() && key.code == KeyCode::Esc {
+            self.close();
+            return true;
+        }
+
         let Some(_items) = &self.items else {return false;};
         let filtered_item_count = self.get_seach_results().count();
 

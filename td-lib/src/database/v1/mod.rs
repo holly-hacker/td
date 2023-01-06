@@ -24,8 +24,14 @@ pub struct Task {
     pub time_created: SystemTime,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TaskDependency;
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct TaskDependency {}
+
+impl TaskDependency {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
 
 impl super::DatabaseImpl for Database {
     const VERSION: u8 = 1;

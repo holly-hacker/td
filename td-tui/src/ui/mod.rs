@@ -2,7 +2,7 @@ use std::{error::Error, io::Stdout, path::PathBuf, time::SystemTime};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
-    database::{Database, DatabaseInfo, Task},
+    database::{Database, DatabaseInfo, Task, TaskDependency},
     errors::DatabaseReadError,
     petgraph::graph::NodeIndex,
 };
@@ -120,7 +120,7 @@ impl Component for LayoutRoot {
 struct BasicTaskList {
     index: usize,
     task_popup: TextInputModal,
-    search_box: ListSearchModal,
+    search_box_depend_on: ListSearchModal<NodeIndex>,
     reverse: bool,
 }
 
@@ -129,7 +129,9 @@ impl BasicTaskList {
         Self {
             index: 0,
             task_popup: TextInputModal::new("Enter new task".to_string()),
-            search_box: ListSearchModal::new("Seach tasks".to_string()),
+            search_box_depend_on: ListSearchModal::new(
+                "Choose which task to depend on".to_string(),
+            ),
             reverse,
         }
     }
@@ -189,14 +191,14 @@ impl Component for BasicTaskList {
 
         // if needed, render popups
         self.task_popup.render(frame, area, state);
-        self.search_box.render(frame, area, state);
+        self.search_box_depend_on.render(frame, area, state);
     }
 
     fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
         if self.task_popup.update(key, state) {
             return true;
         }
-        if self.search_box.update(key, state) {
+        if self.search_box_depend_on.update(key, state) {
             return true;
         }
 
@@ -225,11 +227,24 @@ impl Component for BasicTaskList {
                 }
                 _ => false,
             }
-        } else if self.search_box.is_open() {
+        } else if self.search_box_depend_on.is_open() {
             // popup is open
             match key.code {
                 KeyCode::Enter => {
-                    _ = self.search_box.close();
+                    if let Some(selected_node) = self.search_box_depend_on.close() {
+                        let current_node = tasks[self.index].0;
+
+                        state.database.tasks.add_edge(
+                            current_node,
+                            selected_node,
+                            TaskDependency::new(),
+                        );
+
+                        // TODO: error handling. show popup on failure to save?
+                        let db_info: DatabaseInfo = (&state.database).into();
+                        db_info.write(&state.path).unwrap();
+                    }
+
                     true
                 }
                 _ => false,
@@ -250,10 +265,18 @@ impl Component for BasicTaskList {
 
                     true
                 }
-                (KeyCode::Char('s'), KeyModifiers::NONE) => {
-                    // save
-                    self.search_box
-                        .open(tasks.iter().map(|w| w.1.title.clone()).collect());
+                (KeyCode::Char('l'), KeyModifiers::NONE) => {
+                    // link to other task
+                    let selected = tasks[self.index];
+                    let tasks = tasks
+                        .iter()
+                        .filter(|t| t.0 != selected.0)
+                        .filter(|candidate| {
+                            !state.database.tasks.contains_edge(selected.0, candidate.0)
+                        })
+                        .map(|w| (w.0, w.1.title.clone()))
+                        .collect();
+                    self.search_box_depend_on.open(tasks);
                     true
                 }
                 (KeyCode::Up, KeyModifiers::NONE) => {
