@@ -13,7 +13,7 @@ use crate::{
     utils::RectExt,
 };
 
-const MIN_WIDTH: u16 = 16; // TODO: to central place
+const MIN_WIDTH: u16 = 32; // TODO: to central place
 
 pub struct TextInputModal {
     title: String,

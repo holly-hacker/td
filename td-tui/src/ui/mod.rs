@@ -13,8 +13,12 @@ use tui::{
     Frame, Terminal,
 };
 
-use self::{modal::text_input::TextInputModal, tab_layout::TabLayout};
+use self::{
+    modal::{list_search::ListSearchModal, text_input::TextInputModal},
+    tab_layout::TabLayout,
+};
 
+mod input;
 mod modal;
 mod tab_layout;
 
@@ -114,6 +118,7 @@ impl Component for LayoutRoot {
 struct BasicTaskList {
     index: usize,
     task_popup: TextInputModal,
+    search_box: ListSearchModal,
     reverse: bool,
 }
 
@@ -122,6 +127,7 @@ impl BasicTaskList {
         Self {
             index: 0,
             task_popup: TextInputModal::new("Enter new task".to_string()),
+            search_box: ListSearchModal::new("Seach tasks".to_string()),
             reverse,
         }
     }
@@ -162,19 +168,19 @@ impl Component for BasicTaskList {
             )
             .style(Style::default().fg(Color::DarkGray));
         let mut list_state = ListState::default();
-        list_state.select(if tasks.is_empty() {
-            None
-        } else {
-            Some(self.index)
-        });
+        list_state.select((!tasks.is_empty()).then_some(self.index));
         frame.render_stateful_widget(list, area, &mut list_state);
 
-        // if needed, render the popup
+        // if needed, render popups
         self.task_popup.render(frame, area, state);
+        self.search_box.render(frame, area, state);
     }
 
     fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
         if self.task_popup.update(key, state) {
+            return true;
+        }
+        if self.search_box.update(key, state) {
             return true;
         }
 
@@ -203,6 +209,15 @@ impl Component for BasicTaskList {
                 }
                 _ => false,
             }
+        } else if self.search_box.is_open() {
+            // popup is open
+            match key.code {
+                KeyCode::Enter => {
+                    _ = self.search_box.close();
+                    true
+                }
+                _ => false,
+            }
         } else {
             match key.code {
                 KeyCode::Char('c') if key.modifiers.is_empty() => {
@@ -210,6 +225,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 KeyCode::Char('d') if key.modifiers.is_empty() && !task_indices.is_empty() => {
+                    // TODO: this is bugged! does not take sort into account
                     state.database.tasks.remove_node(task_indices[self.index]);
 
                     // TODO: error handling. show popup on failure to save?
@@ -218,10 +234,18 @@ impl Component for BasicTaskList {
 
                     true
                 }
+                KeyCode::Char('s') if key.modifiers.is_empty() => {
+                    self.search_box.open(
+                        task_indices
+                            .iter()
+                            .filter_map(|i| state.database.tasks.node_weight(*i))
+                            .map(|w| w.title.clone())
+                            .collect(),
+                    );
+                    true
+                }
                 KeyCode::Up => {
-                    if self.index != 0 {
-                        self.index -= 1;
-                    }
+                    self.index = self.index.saturating_sub(1);
                     true
                 }
                 KeyCode::Down => {

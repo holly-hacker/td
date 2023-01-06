@@ -1,5 +1,8 @@
 use crossterm::event::{KeyCode, KeyModifiers};
-use tui::widgets::Paragraph;
+use tui::{
+    style::{Color, Modifier, Style},
+    widgets::Paragraph,
+};
 use tui_input::{Input, InputRequest};
 
 use super::Component;
@@ -7,18 +10,39 @@ use super::Component;
 pub struct TextBoxComponent {
     input: Input,
     focused: bool,
+    has_background: bool,
 }
 
 impl TextBoxComponent {
+    pub const HEIGHT: u16 = 1;
+
+    #[must_use]
     pub fn new_focused() -> Self {
         Self {
-            input: Input::default(),
             focused: true,
+            ..Default::default()
         }
     }
 
+    #[must_use]
+    pub fn with_background(mut self, enabled: bool) -> Self {
+        self.has_background = enabled;
+        self
+    }
+
+    #[must_use]
     pub fn text(&self) -> &str {
         self.input.value()
+    }
+}
+
+impl Default for TextBoxComponent {
+    fn default() -> Self {
+        Self {
+            input: Default::default(),
+            focused: true,
+            has_background: false,
+        }
     }
 }
 
@@ -29,7 +53,14 @@ impl Component for TextBoxComponent {
         area: tui::layout::Rect,
         _state: &super::AppState,
     ) {
-        let paragraph = Paragraph::new(self.input.to_string());
+        let mut paragraph = Paragraph::new(self.input.to_string());
+        if self.has_background {
+            paragraph = paragraph.style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
+        }
         frame.render_widget(paragraph, area);
 
         // TODO: cursor seems to flash and move around. show this differently? maybe put the cursor
