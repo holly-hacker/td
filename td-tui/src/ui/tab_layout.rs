@@ -1,11 +1,12 @@
 use crossterm::event::KeyCode;
 use tui::{
-    layout::Rect,
     style::{Color, Style},
     symbols,
     text::Spans,
     widgets::Tabs,
 };
+
+use crate::utils::RectExt;
 
 use super::Component;
 
@@ -33,8 +34,8 @@ impl Component for TabLayout {
         area: tui::layout::Rect,
         state: &super::AppState,
     ) {
-        let area_tabs = Rect::new(area.x, area.y, area.width, 1);
-        let area_content = Rect::new(area.x, area.y + 1, area.width, area.height - 1);
+        let area_tabs = area.take_y(1);
+        let area_content = area.skip_y(1);
 
         let titles = self
             .titles

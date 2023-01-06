@@ -1,4 +1,5 @@
 mod ui;
+mod utils;
 
 use crossterm::{
     execute,
