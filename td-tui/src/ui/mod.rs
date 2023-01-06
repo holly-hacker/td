@@ -1,6 +1,6 @@
 use std::{error::Error, io::Stdout, path::PathBuf, time::SystemTime};
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
     database::{Database, DatabaseInfo, Task},
     errors::DatabaseReadError,
@@ -13,9 +13,10 @@ use tui::{
     Frame, Terminal,
 };
 
-use self::modal::BasicInputPopup;
+use self::{modal::BasicInputPopup, tab_layout::TabLayout};
 
 mod modal;
+mod tab_layout;
 
 pub struct AppState {
     pub database: Database,
@@ -42,10 +43,7 @@ impl AppState {
         &mut self,
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> Result<(), Box<dyn Error>> {
-        let mut root_component = BasicTaskList {
-            index: 0,
-            task_popup: BasicInputPopup::new("Enter new task".to_string()),
-        };
+        let mut root_component = LayoutRoot::new();
 
         loop {
             terminal.draw(|f| root_component.render(f, f.size(), self))?;
@@ -55,7 +53,9 @@ impl AppState {
                 if !handled {
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Esc => break,
-                        // KeyCode::Char('q') => break,
+                        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                            break
+                        }
                         KeyCode::Char('s') => {
                             // todo: save
                         }
@@ -69,28 +69,80 @@ impl AppState {
     }
 }
 
-trait Component {
+pub trait Component {
     /// Render the component and its children to the given area.
     fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState);
 
     /// Update state based in a key event. Returns whether the key event is handled by this
     /// component or one of its children.
     fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool;
+
+    // TODO: may need to split update into input+update
+}
+
+struct LayoutRoot {
+    tabs: TabLayout,
+}
+
+impl LayoutRoot {
+    fn new() -> Self {
+        Self {
+            tabs: TabLayout::new([
+                (
+                    "Tasks",
+                    Box::new(BasicTaskList::new(false)) as Box<dyn Component>,
+                ),
+                (
+                    "Tasks (rev)",
+                    Box::new(BasicTaskList::new(true)) as Box<dyn Component>,
+                ),
+            ]),
+        }
+    }
+}
+
+impl Component for LayoutRoot {
+    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
+        self.tabs.render(frame, area, state);
+    }
+
+    fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
+        self.tabs.update(key, state)
+    }
 }
 
 struct BasicTaskList {
     index: usize,
     task_popup: BasicInputPopup,
+    reverse: bool,
+}
+
+impl BasicTaskList {
+    fn new(reverse: bool) -> Self {
+        Self {
+            index: 0,
+            task_popup: BasicInputPopup::new("Enter new task".to_string()),
+            reverse,
+        }
+    }
 }
 
 impl Component for BasicTaskList {
     fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
         let mut tasks = state.database.tasks.node_weights().collect::<Vec<_>>();
+
         tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
+        if self.reverse {
+            tasks.reverse();
+        }
 
         // render the list
         let block = Block::default()
-            .title("Basic Task List")
+            .title(if !self.reverse {
+                "Basic Task List"
+            } else {
+                "Basic Task List (reversed)"
+            })
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::White))
             .border_type(BorderType::Rounded)
@@ -153,11 +205,11 @@ impl Component for BasicTaskList {
             }
         } else {
             match key.code {
-                KeyCode::Char('c') => {
+                KeyCode::Char('c') if key.modifiers.is_empty() => {
                     self.task_popup.open();
                     true
                 }
-                KeyCode::Char('d') if !task_indices.is_empty() => {
+                KeyCode::Char('d') if key.modifiers.is_empty() && !task_indices.is_empty() => {
                     state.database.tasks.remove_node(task_indices[self.index]);
 
                     // TODO: error handling. show popup on failure to save?
