@@ -62,9 +62,6 @@ impl AppState {
                         KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                             break
                         }
-                        KeyCode::Char('s') => {
-                            // todo: save
-                        }
                         _ => (),
                     }
                 }
@@ -95,12 +92,12 @@ impl LayoutRoot {
         Self {
             tabs: TabLayout::new([
                 (
-                    "Tasks",
-                    Box::new(BasicTaskList::new(false)) as Box<dyn Component>,
+                    "Newest",
+                    Box::new(BasicTaskList::new(true)) as Box<dyn Component>,
                 ),
                 (
-                    "Tasks (rev)",
-                    Box::new(BasicTaskList::new(true)) as Box<dyn Component>,
+                    "Oldest",
+                    Box::new(BasicTaskList::new(false)) as Box<dyn Component>,
                 ),
             ]),
         }
@@ -121,7 +118,7 @@ struct BasicTaskList {
     index: usize,
     task_popup: TextInputModal,
     search_box_depend_on: ListSearchModal<NodeIndex>,
-    reverse: bool,
+    newest_first: bool,
 }
 
 impl BasicTaskList {
@@ -132,7 +129,7 @@ impl BasicTaskList {
             search_box_depend_on: ListSearchModal::new(
                 "Choose which task to depend on".to_string(),
             ),
-            reverse,
+            newest_first: reverse,
         }
     }
 
@@ -154,7 +151,7 @@ impl BasicTaskList {
             .collect::<Vec<_>>();
 
         tasks.sort_by(|a, b| a.1.time_created.cmp(&b.1.time_created));
-        if self.reverse {
+        if self.newest_first {
             tasks.reverse();
         }
 
@@ -168,10 +165,10 @@ impl Component for BasicTaskList {
 
         // render the list
         let block = Block::default()
-            .title(if !self.reverse {
+            .title(if self.newest_first {
                 "Basic Task List"
             } else {
-                "Basic Task List (reversed)"
+                "Basic Task List (oldest first)"
             })
             .borders(Borders::ALL)
             .border_style(STANDARD_STYLE_FG_WHITE)

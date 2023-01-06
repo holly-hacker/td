@@ -38,7 +38,7 @@ impl Component for TabLayout {
             .titles
             .iter()
             .enumerate()
-            .map(|(i, v)| format!("{}: {v}", i + 1))
+            .map(|(i, v)| format!("{v} [{}]", i + 1))
             .map(Spans::from)
             .collect();
         let tabs = Tabs::new(titles)

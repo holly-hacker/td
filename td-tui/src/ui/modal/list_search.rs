@@ -13,7 +13,7 @@ use crate::{
 pub struct ListSearchModal<TKey: Eq + Clone> {
     title: String,
     items: Option<Vec<(TKey, String)>>,
-    search_box: TextBoxComponent,
+    filter_box: TextBoxComponent,
     index: usize,
 }
 
@@ -22,7 +22,7 @@ impl<TKey: Eq + Clone> ListSearchModal<TKey> {
         Self {
             title,
             items: None,
-            search_box: TextBoxComponent::default(),
+            filter_box: TextBoxComponent::default(),
             index: 0,
         }
     }
@@ -33,7 +33,7 @@ impl<TKey: Eq + Clone> ListSearchModal<TKey> {
 
     pub fn open(&mut self, items: Vec<(TKey, String)>) {
         self.items = Some(items);
-        self.search_box = TextBoxComponent::new_focused().with_background(true);
+        self.filter_box = TextBoxComponent::new_focused().with_background(true);
         self.index = 0;
     }
 
@@ -44,13 +44,13 @@ impl<TKey: Eq + Clone> ListSearchModal<TKey> {
     }
 
     fn get_seach_results(&self) -> Box<dyn Iterator<Item = &(TKey, String)> + '_> {
-        let search_query = self.search_box.text().to_lowercase();
+        let search_query = self.filter_box.text().to_lowercase();
         match &self.items {
             Some(x) => Box::new(
                 x.iter()
                     .filter(move |(_, x)| x.to_lowercase().contains(&search_query)),
             ),
-            None => Box::new([].into_iter()),
+            None => Box::new(std::iter::empty()),
         }
     }
 }
@@ -89,7 +89,7 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         let height_list = 10;
         let block_height = height_list + TextBoxComponent::HEIGHT + 2;
         let block_width = MIN_MODAL_WIDTH
-            .max(self.search_box.text().len() as u16 + 1)
+            .max(self.filter_box.text().len() as u16 + 1)
             .max(self.title.len() as u16)
             + 2;
 
@@ -101,7 +101,7 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         frame.render_widget(Clear, block_area);
         frame.render_widget(block, block_area);
 
-        self.search_box.render(
+        self.filter_box.render(
             frame,
             block_area_inner.take_y(TextBoxComponent::HEIGHT),
             state,
@@ -149,7 +149,7 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         };
 
         if !list_handled {
-            let search_updated = self.search_box.update(key, state);
+            let search_updated = self.filter_box.update(key, state);
 
             if search_updated {
                 if filtered_item_count != 0 {

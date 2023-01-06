@@ -19,7 +19,7 @@ pub struct TextInputModal {
 }
 
 impl TextInputModal {
-    pub fn new(title: String) -> TextInputModal {
+    pub fn new(title: String) -> Self {
         Self { title, input: None }
     }
 
