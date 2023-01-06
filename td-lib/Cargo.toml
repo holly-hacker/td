@@ -10,3 +10,4 @@ petgraph = { version = "0.6", default-features = false, features = ["stable_grap
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
+time = { version = "0.3", features = ["serde", "serde-human-readable", "local-offset", "formatting"] }

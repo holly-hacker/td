@@ -1,17 +1,19 @@
-use std::{io::Stdout, time::SystemTime};
+use std::io::Stdout;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
     database::{DatabaseInfo, Task, TaskDependency},
     petgraph::graph::NodeIndex,
+    time::OffsetDateTime,
 };
 use tui::{
     backend::CrosstermBackend,
-    layout::Rect,
+    layout::{Constraint, Direction, Layout, Rect},
     widgets::{Block, BorderType, Borders, List, ListItem, ListState},
     Frame,
 };
 
+use super::task_info::TaskInfo;
 use crate::ui::{
     constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
     modal::{list_search::ListSearchModal, text_input::TextInputModal},
@@ -65,7 +67,15 @@ impl BasicTaskList {
 
 impl Component for BasicTaskList {
     fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
-        let tasks = self.get_task_list(state);
+        let layout = Layout::default()
+            .constraints([Constraint::Percentage(67), Constraint::Percentage(33)])
+            .direction(Direction::Horizontal)
+            .split(area);
+
+        let list_area = layout[0];
+        let info_area = layout[1];
+
+        let task_list = self.get_task_list(state);
 
         // render the list
         let block = Block::default()
@@ -78,7 +88,7 @@ impl Component for BasicTaskList {
             .border_style(STANDARD_STYLE_FG_WHITE)
             .border_type(BorderType::Rounded);
 
-        let list_items = tasks
+        let list_items = task_list
             .iter()
             .map(|t| ListItem::new(t.1.title.clone()))
             .collect::<Vec<_>>();
@@ -87,8 +97,11 @@ impl Component for BasicTaskList {
             .highlight_style(LIST_HIGHLIGHT_STYLE)
             .style(LIST_STYLE);
         let mut list_state = ListState::default();
-        list_state.select((!tasks.is_empty()).then_some(self.index));
-        frame.render_stateful_widget(list, area, &mut list_state);
+        list_state.select((!task_list.is_empty()).then_some(self.index));
+        frame.render_stateful_widget(list, list_area, &mut list_state);
+
+        // render info
+        TaskInfo::new(task_list.get(self.index).map(|x| x.0)).render(frame, info_area, state);
 
         // if needed, render popups
         self.task_popup.render(frame, area, state);
@@ -114,9 +127,11 @@ impl Component for BasicTaskList {
             match key.code {
                 KeyCode::Enter => {
                     if let Some(text) = self.task_popup.close() {
+                        let time_created = OffsetDateTime::now_local()
+                            .unwrap_or_else(|_| OffsetDateTime::now_utc());
                         let task = Task {
                             title: text,
-                            time_created: SystemTime::now(),
+                            time_created,
                         };
                         state.database.tasks.add_node(task);
 
@@ -151,6 +166,7 @@ impl Component for BasicTaskList {
                 _ => false,
             }
         } else {
+            // take our own input
             match (key.code, key.modifiers) {
                 (KeyCode::Char('c'), KeyModifiers::NONE) => {
                     self.task_popup.open();

@@ -12,6 +12,20 @@ pub const STANDARD_STYLE_FG_WHITE: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
+pub const BOLD: Style = Style {
+    fg: None,
+    bg: None,
+    add_modifier: Modifier::BOLD,
+    sub_modifier: Modifier::empty(),
+};
+
+pub const BOLD_UNDERLINED: Style = Style {
+    fg: None,
+    bg: None,
+    add_modifier: Modifier::BOLD.union(Modifier::UNDERLINED),
+    sub_modifier: Modifier::empty(),
+};
+
 /// The style for unselected list items
 pub const LIST_STYLE: Style = Style {
     fg: Some(Color::Gray),

@@ -1,9 +1,8 @@
 //! The current version of the database as it is being developed.
 
-use std::time::SystemTime;
-
 use petgraph::stable_graph::StableDiGraph;
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 
 // TODO: maybe want to have separate disk model and in-memory model? currently relying on petgraph's internal structure
 // I can implement that using a custom serialize/deserialize implementation
@@ -21,7 +20,7 @@ pub struct Database {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Task {
     pub title: String,
-    pub time_created: SystemTime,
+    pub time_created: OffsetDateTime,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
