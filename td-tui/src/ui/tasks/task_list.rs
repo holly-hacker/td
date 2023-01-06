@@ -23,6 +23,7 @@ use crate::ui::{
 pub struct BasicTaskList {
     index: usize,
     task_popup: TextInputModal,
+    tag_popup: TextInputModal,
     search_box_depend_on: ListSearchModal<NodeIndex>,
     newest_first: bool,
 }
@@ -32,6 +33,7 @@ impl BasicTaskList {
         Self {
             index: 0,
             task_popup: TextInputModal::new("Enter new task".to_string()),
+            tag_popup: TextInputModal::new("Enter new tag".to_string()),
             search_box_depend_on: ListSearchModal::new(
                 "Choose which task to depend on".to_string(),
             ),
@@ -105,14 +107,16 @@ impl Component for BasicTaskList {
 
         // if needed, render popups
         self.task_popup.render(frame, area, state);
+        self.tag_popup.render(frame, area, state);
         self.search_box_depend_on.render(frame, area, state);
     }
 
     fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
-        if self.task_popup.update(key, state) {
-            return true;
-        }
-        if self.search_box_depend_on.update(key, state) {
+        // check modals
+        if self.task_popup.update(key, state)
+            || self.tag_popup.update(key, state)
+            || self.search_box_depend_on.update(key, state)
+        {
             return true;
         }
 
@@ -124,46 +128,61 @@ impl Component for BasicTaskList {
 
         if self.task_popup.is_open() {
             // popup is open
-            match key.code {
-                KeyCode::Enter => {
-                    if let Some(text) = self.task_popup.close() {
-                        let time_created = OffsetDateTime::now_local()
-                            .unwrap_or_else(|_| OffsetDateTime::now_utc());
-                        let task = Task {
-                            title: text,
-                            time_created,
-                        };
-                        state.database.tasks.add_node(task);
+            if key.code == KeyCode::Enter {
+                if let Some(text) = self.task_popup.close() {
+                    let time_created =
+                        OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+                    let task = Task {
+                        title: text,
+                        time_created,
+                        tags: vec![],
+                    };
+                    state.database.tasks.add_node(task);
 
-                        // TODO: error handling. show popup on failure to save?
-                        let db_info: DatabaseInfo = (&state.database).into();
-                        db_info.write(&state.path).unwrap();
-                    }
-                    true
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
                 }
-                _ => false,
+                true
+            } else {
+                false
+            }
+        } else if self.tag_popup.is_open() {
+            // popup is open
+            if key.code == KeyCode::Enter {
+                if let Some(text) = self.tag_popup.close() {
+                    let selected_task_id = tasks[self.index].0;
+                    let selected_task = &mut state.database.tasks[selected_task_id];
+                    selected_task.tags.push(text);
+
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
+                }
+                true
+            } else {
+                false
             }
         } else if self.search_box_depend_on.is_open() {
             // popup is open
-            match key.code {
-                KeyCode::Enter => {
-                    if let Some(selected_node) = self.search_box_depend_on.close() {
-                        let current_node = tasks[self.index].0;
+            if key.code == KeyCode::Enter {
+                if let Some(selected_node) = self.search_box_depend_on.close() {
+                    let current_node = tasks[self.index].0;
 
-                        state.database.tasks.add_edge(
-                            current_node,
-                            selected_node,
-                            TaskDependency::new(),
-                        );
+                    state.database.tasks.add_edge(
+                        current_node,
+                        selected_node,
+                        TaskDependency::new(),
+                    );
 
-                        // TODO: error handling. show popup on failure to save?
-                        let db_info: DatabaseInfo = (&state.database).into();
-                        db_info.write(&state.path).unwrap();
-                    }
-
-                    true
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
                 }
-                _ => false,
+
+                true
+            } else {
+                false
             }
         } else {
             // take our own input
@@ -172,13 +191,23 @@ impl Component for BasicTaskList {
                     self.task_popup.open();
                     true
                 }
-                (KeyCode::Char('d'), KeyModifiers::NONE) if !tasks.is_empty() => {
-                    // delete
-                    state.database.tasks.remove_node(tasks[self.index].0);
+                (KeyCode::Char('d'), KeyModifiers::NONE) => {
+                    if !tasks.is_empty() {
+                        // delete
+                        state.database.tasks.remove_node(tasks[self.index].0);
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                        // TODO: error handling. show popup on failure to save?
+                        let db_info: DatabaseInfo = (&state.database).into();
+                        db_info.write(&state.path).unwrap();
+                    }
+
+                    true
+                }
+                (KeyCode::Char('t'), KeyModifiers::NONE) => {
+                    if !tasks.is_empty() {
+                        // add tag to currently selected task
+                        self.tag_popup.open();
+                    }
 
                     true
                 }

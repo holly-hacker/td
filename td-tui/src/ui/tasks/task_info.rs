@@ -87,6 +87,17 @@ impl Component for TaskInfo {
             ]),
         ];
 
+        // add tags
+        if !task.tags.is_empty() {
+            spans.extend([Spans::default(), Spans::from(Span::styled("Tags:", BOLD))]);
+
+            spans.extend(
+                task.tags
+                    .iter()
+                    .map(|tag| Spans::from(vec![Span::raw("- "), Span::raw(tag)])),
+            );
+        }
+
         // add dependencies
         let dependencies = Self::get_dependencies(node_index, state);
         if !dependencies.is_empty() {

@@ -21,6 +21,8 @@ pub struct Database {
 pub struct Task {
     pub title: String,
     pub time_created: OffsetDateTime,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
