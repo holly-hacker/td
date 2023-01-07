@@ -15,7 +15,7 @@ use tui::{
 
 use crate::{
     keybinds::{
-        KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_CREATE, KEYBIND_TASK_DELETE,
+        KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE, KEYBIND_TASK_NEW,
     },
     ui::{
         constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
@@ -88,7 +88,7 @@ impl Component for BasicTaskList {
             .pre_render(global_state, frame_storage);
 
         frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
-        frame_storage.add_keybind(KEYBIND_TASK_CREATE.to_string(), "Create task", true);
+        frame_storage.add_keybind(KEYBIND_TASK_NEW.to_string(), "New task", true);
         frame_storage.add_keybind(KEYBIND_TASK_DELETE.to_string(), "Delete task", true);
         frame_storage.add_keybind(KEYBIND_TASK_ADD_TAG.to_string(), "Add tag", true);
         frame_storage.add_keybind(
@@ -231,7 +231,7 @@ impl Component for BasicTaskList {
         } else {
             // take our own input
             match (key.code, key.modifiers) {
-                (KeyCode::Char(KEYBIND_TASK_CREATE), KeyModifiers::NONE) => {
+                (KeyCode::Char(KEYBIND_TASK_NEW), KeyModifiers::NONE) => {
                     self.task_popup.open();
                     true
                 }
