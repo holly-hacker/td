@@ -274,7 +274,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 (KeyCode::Down, KeyModifiers::NONE) => {
-                    if self.index != tasks.len() - 1 {
+                    if !tasks.is_empty() && self.index != tasks.len() - 1 {
                         self.index += 1;
                     }
                     true
