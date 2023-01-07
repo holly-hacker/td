@@ -3,7 +3,7 @@ use tui::style::{Color, Modifier, Style};
 /// The minimum width a modal window can be
 pub const MIN_MODAL_WIDTH: u16 = 32;
 
-pub const ACCENT_COLOR: Color = Color::Blue;
+pub const ACCENT_COLOR: Color = Color::LightBlue;
 
 pub const STANDARD_STYLE_FG_WHITE: Style = Style {
     fg: Some(Color::White),
@@ -73,3 +73,26 @@ pub const TEXTBOX_STYLE_BG: Style = Style {
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
 };
+
+pub const KEYBINDS_TEXT_ACTIVE: Style = Style {
+    fg: Some(Color::Gray),
+    bg: None,
+    add_modifier: Modifier::BOLD,
+    sub_modifier: Modifier::empty(),
+};
+
+pub const KEYBINDS_TEXT_INACTIVE: Style = Style {
+    fg: Some(Color::DarkGray),
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+pub const KEYBINDS_CHAR_ACTIVE: Style = Style {
+    fg: Some(ACCENT_COLOR),
+    bg: None,
+    add_modifier: Modifier::BOLD,
+    sub_modifier: Modifier::empty(),
+};
+
+pub const KEYBINDS_CHAR_INACTIVE: Style = KEYBINDS_TEXT_INACTIVE;

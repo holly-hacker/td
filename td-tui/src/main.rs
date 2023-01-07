@@ -1,3 +1,4 @@
+mod keybinds;
 mod ui;
 mod utils;
 

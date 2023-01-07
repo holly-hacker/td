@@ -44,6 +44,11 @@ impl Component for TextInputModal {
     ) {
         if let Some(input) = &self.input {
             input.pre_render(global_state, frame_storage);
+
+            // NOTE: could check if at least 1 character is entered, as an option
+            frame_storage.add_keybind("⏎", "Submit", true);
+            frame_storage.add_keybind("⎋", "Close", true);
+            frame_storage.lock_keybinds();
         }
     }
 

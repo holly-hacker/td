@@ -41,6 +41,11 @@ impl Component for TabLayout {
         if let Some(component) = self.get_selected_component() {
             component.pre_render(global_state, frame_storage)
         }
+
+        if self.items.len() >= 2 {
+            // TODO: showing this is kinda useless. maybe add a `TAB` keybind instead and show that
+            frame_storage.add_keybind(format!("1..{}", self.items.len()), "Select tab", true);
+        }
     }
 
     fn render(

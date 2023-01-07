@@ -13,11 +13,16 @@ use tui::{
     Frame,
 };
 
-use super::task_info::TaskInfoDisplay;
-use crate::ui::{
-    constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
-    modal::{list_search::ListSearchModal, text_input::TextInputModal},
-    AppState, Component, FrameLocalStorage,
+use crate::{
+    keybinds::{
+        KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_CREATE, KEYBIND_TASK_DELETE,
+    },
+    ui::{
+        constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
+        modal::{list_search::ListSearchModal, text_input::TextInputModal},
+        task_info::TaskInfoDisplay,
+        AppState, Component, FrameLocalStorage,
+    },
 };
 
 pub struct BasicTaskList {
@@ -81,6 +86,16 @@ impl Component for BasicTaskList {
         self.tag_popup.pre_render(global_state, frame_storage);
         self.search_box_depend_on
             .pre_render(global_state, frame_storage);
+
+        frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
+        frame_storage.add_keybind(KEYBIND_TASK_CREATE.to_string(), "Create task", true);
+        frame_storage.add_keybind(KEYBIND_TASK_DELETE.to_string(), "Delete task", true);
+        frame_storage.add_keybind(KEYBIND_TASK_ADD_TAG.to_string(), "Add tag", true);
+        frame_storage.add_keybind(
+            KEYBIND_TASK_ADD_DEPENDENCY.to_string(),
+            "Add dependency",
+            true,
+        );
     }
 
     fn render(
@@ -216,11 +231,11 @@ impl Component for BasicTaskList {
         } else {
             // take our own input
             match (key.code, key.modifiers) {
-                (KeyCode::Char('c'), KeyModifiers::NONE) => {
+                (KeyCode::Char(KEYBIND_TASK_CREATE), KeyModifiers::NONE) => {
                     self.task_popup.open();
                     true
                 }
-                (KeyCode::Char('d'), KeyModifiers::NONE) => {
+                (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // delete
                         state.database.tasks.remove_node(tasks[self.index].0);
@@ -232,7 +247,7 @@ impl Component for BasicTaskList {
 
                     true
                 }
-                (KeyCode::Char('t'), KeyModifiers::NONE) => {
+                (KeyCode::Char(KEYBIND_TASK_ADD_TAG), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // add tag to currently selected task
                         self.tag_popup.open();
@@ -240,7 +255,7 @@ impl Component for BasicTaskList {
 
                     true
                 }
-                (KeyCode::Char('l'), KeyModifiers::NONE) => {
+                (KeyCode::Char(KEYBIND_TASK_ADD_DEPENDENCY), KeyModifiers::NONE) => {
                     // link to other task
                     let selected = tasks[self.index];
                     let tasks = tasks

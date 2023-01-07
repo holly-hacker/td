@@ -1,4 +1,4 @@
-use std::{error::Error, io::Stdout, path::PathBuf};
+use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
@@ -8,12 +8,15 @@ use td_lib::{
 };
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 
-use self::{tab_layout::TabLayout, tasks::task_list::BasicTaskList};
+use self::{keybind_list::KeybindList, tab_layout::TabLayout, tasks::task_list::BasicTaskList};
+use crate::utils::RectExt;
 
 mod constants;
 mod input;
+mod keybind_list;
 mod modal;
 mod tab_layout;
+mod task_info;
 mod tasks;
 
 pub struct AppState {
@@ -47,6 +50,8 @@ impl AppState {
         loop {
             let mut frame_storage = FrameLocalStorage::default();
             root_component.pre_render(self, &mut frame_storage);
+            frame_storage.add_keybind("⎋, q", "Quit", true);
+
             terminal.draw(|f| root_component.render(f, f.size(), self, &frame_storage))?;
 
             if let Event::Key(key) = event::read()? {
@@ -71,8 +76,39 @@ impl AppState {
 /// during [Component::render] and [Component::process_input].
 #[derive(Default)]
 pub struct FrameLocalStorage {
+    /// A map of keybind to action for the currently rendering frame
+    current_keybinds: Vec<(Cow<'static, str>, Cow<'static, str>, bool)>,
+    keybinds_locked: bool,
+
     /// The currently selected/focused task
-    pub selected_task_index: Option<NodeIndex>,
+    selected_task_index: Option<NodeIndex>,
+}
+
+impl FrameLocalStorage {
+    /// Registers a keybind to be shown with [KeybindList].
+    pub fn add_keybind(
+        &mut self,
+        keybind: impl Into<Cow<'static, str>>,
+        description: impl Into<Cow<'static, str>>,
+        enabled: bool,
+    ) {
+        if self.keybinds_locked {
+            return;
+        }
+
+        let (keybind, description) = (keybind.into(), description.into());
+        debug_assert_eq!(
+            self.current_keybinds.iter().find(|x| x.0 == keybind),
+            None,
+            "duplicate keybind: {keybind} (added as '{description}')"
+        );
+        self.current_keybinds.push((keybind, description, enabled));
+    }
+
+    /// Disallows more keybinds to be added.
+    pub fn lock_keybinds(&mut self) {
+        self.keybinds_locked = true;
+    }
 }
 
 pub trait Component {
@@ -132,7 +168,11 @@ impl Component for LayoutRoot {
         state: &AppState,
         frame_storage: &FrameLocalStorage,
     ) {
-        self.tabs.render(frame, area, state, frame_storage);
+        let area_tabs = area.skip_last_y(1);
+        let area_keybinds = area.take_last_y(1);
+        self.tabs.render(frame, area_tabs, state, frame_storage);
+
+        KeybindList.render(frame, area_keybinds, state, frame_storage);
     }
 
     fn process_input(

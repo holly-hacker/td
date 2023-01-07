@@ -61,7 +61,17 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         global_state: &crate::ui::AppState,
         frame_storage: &mut crate::ui::FrameLocalStorage,
     ) {
-        self.filter_box.pre_render(global_state, frame_storage)
+        if self.items.is_some() {
+            self.filter_box.pre_render(global_state, frame_storage);
+
+            let mut results = self.get_seach_results();
+            let at_least_1_result = results.next().is_some();
+            let at_least_2_results = results.next().is_some();
+            frame_storage.add_keybind("⇅", "Navigate list", at_least_2_results);
+            frame_storage.add_keybind("⏎", "Select item", at_least_1_result);
+            frame_storage.add_keybind("⎋", "Close", true);
+            frame_storage.lock_keybinds();
+        }
     }
 
     fn render(
