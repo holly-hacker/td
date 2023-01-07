@@ -56,11 +56,20 @@ impl<TKey: Eq + Clone> ListSearchModal<TKey> {
 }
 
 impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
+    fn pre_render(
+        &self,
+        global_state: &crate::ui::AppState,
+        frame_storage: &mut crate::ui::FrameLocalStorage,
+    ) {
+        self.filter_box.pre_render(global_state, frame_storage)
+    }
+
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
         area: tui::layout::Rect,
         state: &crate::ui::AppState,
+        frame_storage: &crate::ui::FrameLocalStorage,
     ) {
         let Some(items) = &self.items else {return;};
 
@@ -105,6 +114,7 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
             frame,
             block_area_inner.take_y(TextBoxComponent::HEIGHT),
             state,
+            frame_storage,
         );
         frame.render_stateful_widget(
             list,
@@ -113,7 +123,12 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         );
     }
 
-    fn update(&mut self, key: crossterm::event::KeyEvent, state: &mut crate::ui::AppState) -> bool {
+    fn process_input(
+        &mut self,
+        key: crossterm::event::KeyEvent,
+        state: &mut crate::ui::AppState,
+        frame_storage: &crate::ui::FrameLocalStorage,
+    ) -> bool {
         // always close with Esc
         if self.is_open() && key.code == KeyCode::Esc {
             self.close();
@@ -149,7 +164,7 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         };
 
         if !list_handled {
-            let search_updated = self.filter_box.update(key, state);
+            let search_updated = self.filter_box.process_input(key, state, frame_storage);
 
             if search_updated {
                 if filtered_item_count != 0 {

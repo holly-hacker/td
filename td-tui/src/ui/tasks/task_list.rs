@@ -13,11 +13,11 @@ use tui::{
     Frame,
 };
 
-use super::task_info::TaskInfo;
+use super::task_info::TaskInfoDisplay;
 use crate::ui::{
     constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
     modal::{list_search::ListSearchModal, text_input::TextInputModal},
-    AppState, Component,
+    AppState, Component, FrameLocalStorage,
 };
 
 pub struct BasicTaskList {
@@ -41,7 +41,10 @@ impl BasicTaskList {
         }
     }
 
-    fn get_task_list<'state>(&self, state: &'state AppState) -> Vec<(NodeIndex, &'state Task)> {
+    fn get_sorted_task_list<'state>(
+        &self,
+        state: &'state AppState,
+    ) -> Vec<(NodeIndex, &'state Task)> {
         let mut tasks = state
             .database
             .tasks
@@ -68,7 +71,25 @@ impl BasicTaskList {
 }
 
 impl Component for BasicTaskList {
-    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
+    fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
+        // store currently selected task in frame storage
+        let task_list = self.get_sorted_task_list(global_state);
+        let selected_task_id = task_list.get(self.index).map(|x| x.0);
+        frame_storage.selected_task_index = selected_task_id;
+
+        self.task_popup.pre_render(global_state, frame_storage);
+        self.tag_popup.pre_render(global_state, frame_storage);
+        self.search_box_depend_on
+            .pre_render(global_state, frame_storage);
+    }
+
+    fn render(
+        &self,
+        frame: &mut Frame<CrosstermBackend<Stdout>>,
+        area: Rect,
+        state: &AppState,
+        frame_storage: &crate::ui::FrameLocalStorage,
+    ) {
         let layout = Layout::default()
             .constraints([Constraint::Percentage(67), Constraint::Percentage(33)])
             .direction(Direction::Horizontal)
@@ -77,7 +98,7 @@ impl Component for BasicTaskList {
         let list_area = layout[0];
         let info_area = layout[1];
 
-        let task_list = self.get_task_list(state);
+        let task_list = self.get_sorted_task_list(state);
 
         // render the list
         let block = Block::default()
@@ -103,24 +124,32 @@ impl Component for BasicTaskList {
         frame.render_stateful_widget(list, list_area, &mut list_state);
 
         // render info
-        TaskInfo::new(task_list.get(self.index).map(|x| x.0)).render(frame, info_area, state);
+        TaskInfoDisplay.render(frame, info_area, state, frame_storage);
 
         // if needed, render popups
-        self.task_popup.render(frame, area, state);
-        self.tag_popup.render(frame, area, state);
-        self.search_box_depend_on.render(frame, area, state);
+        self.task_popup.render(frame, area, state, frame_storage);
+        self.tag_popup.render(frame, area, state, frame_storage);
+        self.search_box_depend_on
+            .render(frame, area, state, frame_storage);
     }
 
-    fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
+    fn process_input(
+        &mut self,
+        key: KeyEvent,
+        state: &mut AppState,
+        frame_storage: &FrameLocalStorage,
+    ) -> bool {
         // check modals
-        if self.task_popup.update(key, state)
-            || self.tag_popup.update(key, state)
-            || self.search_box_depend_on.update(key, state)
+        if self.task_popup.process_input(key, state, frame_storage)
+            || self.tag_popup.process_input(key, state, frame_storage)
+            || self
+                .search_box_depend_on
+                .process_input(key, state, frame_storage)
         {
             return true;
         }
 
-        let tasks = self.get_task_list(state);
+        let tasks = self.get_sorted_task_list(state);
 
         if !tasks.is_empty() {
             self.index = self.index.clamp(0, tasks.len() - 1);

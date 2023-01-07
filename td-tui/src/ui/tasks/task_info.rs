@@ -10,18 +10,12 @@ use tui::{
 
 use crate::ui::{
     constants::{BOLD, BOLD_UNDERLINED},
-    AppState, Component,
+    AppState, Component, FrameLocalStorage,
 };
 
-pub struct TaskInfo {
-    task_index: Option<NodeIndex>,
-}
+pub struct TaskInfoDisplay;
 
-impl TaskInfo {
-    pub fn new(index: Option<NodeIndex>) -> Self {
-        Self { task_index: index }
-    }
-
+impl TaskInfoDisplay {
     fn get_dependencies(node_index: NodeIndex, state: &AppState) -> Vec<&Task> {
         state
             .database
@@ -53,14 +47,17 @@ impl TaskInfo {
     }
 }
 
-impl Component for TaskInfo {
+impl Component for TaskInfoDisplay {
+    fn pre_render(&self, _global_state: &AppState, _frame_storage: &mut FrameLocalStorage) {}
+
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
         area: tui::layout::Rect,
         state: &AppState,
+        frame_storage: &FrameLocalStorage,
     ) {
-        let Some(node_index) = self.task_index else {
+        let Some(node_index) = frame_storage.selected_task_index else {
             frame.render_widget(Paragraph::new("No task selected"), area);
             return;
         };
@@ -132,7 +129,12 @@ impl Component for TaskInfo {
         frame.render_widget(paragraph, area);
     }
 
-    fn update(&mut self, _key: crossterm::event::KeyEvent, _state: &mut AppState) -> bool {
+    fn process_input(
+        &mut self,
+        _key: crossterm::event::KeyEvent,
+        _state: &mut AppState,
+        _frame_storage: &FrameLocalStorage,
+    ) -> bool {
         false
     }
 }

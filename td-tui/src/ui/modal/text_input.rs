@@ -37,7 +37,23 @@ impl TextInputModal {
 }
 
 impl Component for TextInputModal {
-    fn render(&self, frame: &mut Frame<CrosstermBackend<Stdout>>, area: Rect, state: &AppState) {
+    fn pre_render(
+        &self,
+        global_state: &AppState,
+        frame_storage: &mut crate::ui::FrameLocalStorage,
+    ) {
+        if let Some(input) = &self.input {
+            input.pre_render(global_state, frame_storage);
+        }
+    }
+
+    fn render(
+        &self,
+        frame: &mut Frame<CrosstermBackend<Stdout>>,
+        area: Rect,
+        state: &AppState,
+        frame_storage: &crate::ui::FrameLocalStorage,
+    ) {
         let Some(textbox) = &self.input else {return;};
 
         let block = Block::default()
@@ -54,10 +70,15 @@ impl Component for TextInputModal {
 
         frame.render_widget(Clear, block_area);
         frame.render_widget(block, block_area);
-        textbox.render(frame, block_area_inner, state);
+        textbox.render(frame, block_area_inner, state, frame_storage);
     }
 
-    fn update(&mut self, key: KeyEvent, state: &mut AppState) -> bool {
+    fn process_input(
+        &mut self,
+        key: KeyEvent,
+        state: &mut AppState,
+        frame_storage: &crate::ui::FrameLocalStorage,
+    ) -> bool {
         // always close with Esc
         if self.is_open() && key.code == KeyCode::Esc {
             self.close();
@@ -66,6 +87,6 @@ impl Component for TextInputModal {
 
         let Some(input) = &mut self.input else {return false;};
 
-        input.update(key, state)
+        input.process_input(key, state, frame_storage)
     }
 }

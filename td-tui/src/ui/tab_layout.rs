@@ -22,14 +22,33 @@ impl TabLayout {
             index: 0,
         }
     }
+
+    fn get_selected_component(&self) -> Option<&dyn Component> {
+        self.items.get(self.index).map(|x| x.as_ref())
+    }
+
+    fn get_selected_component_mut(&mut self) -> Option<&mut Box<dyn Component>> {
+        self.items.get_mut(self.index)
+    }
 }
 
 impl Component for TabLayout {
+    fn pre_render(
+        &self,
+        global_state: &super::AppState,
+        frame_storage: &mut super::FrameLocalStorage,
+    ) {
+        if let Some(component) = self.get_selected_component() {
+            component.pre_render(global_state, frame_storage)
+        }
+    }
+
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
         area: tui::layout::Rect,
         state: &super::AppState,
+        frame_storage: &super::FrameLocalStorage,
     ) {
         let area_tabs = area.take_y(1);
         let area_content = area.skip_y(1);
@@ -49,14 +68,19 @@ impl Component for TabLayout {
 
         frame.render_widget(tabs, area_tabs);
 
-        if let Some(content) = self.items.get(self.index) {
-            content.render(frame, area_content, state);
+        if let Some(content) = self.get_selected_component() {
+            content.render(frame, area_content, state, frame_storage);
         }
     }
 
-    fn update(&mut self, key: crossterm::event::KeyEvent, state: &mut super::AppState) -> bool {
-        let content_update = if let Some(content) = self.items.get_mut(self.index) {
-            content.update(key, state)
+    fn process_input(
+        &mut self,
+        key: crossterm::event::KeyEvent,
+        state: &mut super::AppState,
+        frame_storage: &super::FrameLocalStorage,
+    ) -> bool {
+        let content_update = if let Some(content) = self.get_selected_component_mut() {
+            content.process_input(key, state, frame_storage)
         } else {
             false
         };

@@ -47,11 +47,19 @@ impl Default for TextBoxComponent {
 }
 
 impl Component for TextBoxComponent {
+    fn pre_render(
+        &self,
+        _global_state: &super::AppState,
+        _frame_storage: &mut super::FrameLocalStorage,
+    ) {
+    }
+
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
         area: tui::layout::Rect,
         _state: &super::AppState,
+        _frame_storage: &super::FrameLocalStorage,
     ) {
         let paragraph = Paragraph::new(self.input.to_string()).style(if self.has_background {
             TEXTBOX_STYLE_BG
@@ -67,7 +75,12 @@ impl Component for TextBoxComponent {
         }
     }
 
-    fn update(&mut self, key: crossterm::event::KeyEvent, _state: &mut super::AppState) -> bool {
+    fn process_input(
+        &mut self,
+        key: crossterm::event::KeyEvent,
+        _state: &mut super::AppState,
+        _frame_storage: &super::FrameLocalStorage,
+    ) -> bool {
         if !self.focused {
             return false;
         }
