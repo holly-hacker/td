@@ -26,10 +26,24 @@ pub const FG_RED: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
+pub const FG_DIM: Style = Style {
+    fg: Some(Color::DarkGray),
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
 pub const BOLD: Style = Style {
     fg: None,
     bg: None,
     add_modifier: Modifier::BOLD,
+    sub_modifier: Modifier::empty(),
+};
+
+pub const ITALIC: Style = Style {
+    fg: None,
+    bg: None,
+    add_modifier: Modifier::ITALIC,
     sub_modifier: Modifier::empty(),
 };
 

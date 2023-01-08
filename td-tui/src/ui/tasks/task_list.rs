@@ -21,7 +21,8 @@ use crate::{
     },
     ui::{
         constants::{
-            BOLD, COMPLETED_TASK, FG_GREEN, FG_RED, FG_WHITE, LIST_HIGHLIGHT_STYLE, LIST_STYLE,
+            BOLD, COMPLETED_TASK, FG_DIM, FG_GREEN, FG_RED, FG_WHITE, ITALIC, LIST_HIGHLIGHT_STYLE,
+            LIST_STYLE,
         },
         modal::{list_search::ListSearchModal, text_input::TextInputModal},
         task_info::TaskInfoDisplay,
@@ -114,6 +115,12 @@ impl BasicTaskList {
             LIST_STYLE
         };
         spans.push(Span::styled(task.title.clone(), text_style));
+
+        // add tags
+        for task in &task.tags {
+            spans.push(Span::raw(" "));
+            spans.push(Span::styled(task.clone(), FG_DIM.patch(ITALIC)));
+        }
 
         spans.into()
     }
