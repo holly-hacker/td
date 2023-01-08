@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyModifiers};
 use tui::{symbols, text::Spans, widgets::Tabs};
 
 use super::{
@@ -42,6 +42,7 @@ impl Component for TabLayout {
             component.pre_render(global_state, frame_storage)
         }
 
+        frame_storage.add_keybind("⭾", "Next tab", self.items.len() >= 2);
         if self.items.len() >= 2 {
             // TODO: showing this is kinda useless. maybe add a `TAB` keybind instead and show that
             frame_storage.add_keybind(format!("1..{}", self.items.len()), "Select tab", true);
@@ -91,8 +92,8 @@ impl Component for TabLayout {
         };
 
         content_update
-            || match key.code {
-                KeyCode::Char(c @ '1'..='9') => {
+            || match (key.code, key.modifiers) {
+                (KeyCode::Char(c @ '1'..='9'), _) => {
                     let index = (c as u8 - b'1') as usize;
                     if index < self.items.len() {
                         self.index = index;
@@ -100,6 +101,15 @@ impl Component for TabLayout {
                     } else {
                         false
                     }
+                }
+                (KeyCode::Tab, KeyModifiers::NONE) => {
+                    self.index = (self.index + 1) % self.items.len();
+                    true
+                }
+                (KeyCode::Tab | KeyCode::BackTab, KeyModifiers::SHIFT) => {
+                    self.index = (self.index + self.items.len() - 1) % self.items.len();
+                    // self.index = 1;
+                    true
                 }
                 _ => false,
             }

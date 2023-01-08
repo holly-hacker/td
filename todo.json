@@ -94,6 +94,16 @@
           18,
           15,
           {}
+        ],
+        [
+          9,
+          17,
+          {}
+        ],
+        [
+          18,
+          24,
+          {}
         ]
       ],
       "node_holes": [],
@@ -193,6 +203,7 @@
           "title": "List: Dependency Tree"
         },
         {
+          "time_completed": "2023-01-08 14:00:12.7394662 +01:00:00",
           "time_created": "2023-01-07 23:04:08.9813024 +01:00:00",
           "title": "Move between tabs with TAB keybind"
         },
@@ -222,6 +233,27 @@
         {
           "time_created": "2023-01-08 13:14:03.1784967 +01:00:00",
           "title": "Allow creating dependency in opposite direction"
+        },
+        {
+          "tags": [
+            "P:3"
+          ],
+          "time_created": "2023-01-08 13:44:41.2939962 +01:00:00",
+          "title": "Show warning if new dependency will make graph cyclic"
+        },
+        {
+          "tags": [
+            "P:1"
+          ],
+          "time_created": "2023-01-08 13:46:46.3254092 +01:00:00",
+          "title": "Improve how shortcuts are handled internally"
+        },
+        {
+          "tags": [
+            "P:1"
+          ],
+          "time_created": "2023-01-08 13:59:37.4034566 +01:00:00",
+          "title": "Add search for task in task list"
         }
       ]
     }
