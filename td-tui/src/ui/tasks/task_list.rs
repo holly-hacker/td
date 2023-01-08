@@ -17,7 +17,7 @@ use tui::{
 use crate::{
     keybinds::{
         KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE,
-        KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_NEW,
+        KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_NEW, KEYBIND_TASK_RENAME,
     },
     ui::{
         constants::{
@@ -32,8 +32,9 @@ use crate::{
 
 pub struct BasicTaskList {
     index: usize,
-    task_popup: TextInputModal,
-    tag_popup: TextInputModal,
+    create_task_modal: TextInputModal,
+    new_tag_modal: TextInputModal,
+    rename_task_modal: TextInputModal,
     search_box_depend_on: ListSearchModal<NodeIndex>,
     newest_first: bool,
 }
@@ -42,8 +43,9 @@ impl BasicTaskList {
     pub fn new(reverse: bool) -> Self {
         Self {
             index: 0,
-            task_popup: TextInputModal::new("Enter new task".to_string()),
-            tag_popup: TextInputModal::new("Enter new tag".to_string()),
+            create_task_modal: TextInputModal::new("Create new task".to_string()),
+            new_tag_modal: TextInputModal::new("Add new tag".to_string()),
+            rename_task_modal: TextInputModal::new("Rename task".to_string()),
             search_box_depend_on: ListSearchModal::new(
                 "Choose which task to depend on".to_string(),
             ),
@@ -133,8 +135,11 @@ impl Component for BasicTaskList {
         let selected_task_id = task_list.get(self.index).map(|x| x.0);
         frame_storage.selected_task_index = selected_task_id;
 
-        self.task_popup.pre_render(global_state, frame_storage);
-        self.tag_popup.pre_render(global_state, frame_storage);
+        self.create_task_modal
+            .pre_render(global_state, frame_storage);
+        self.rename_task_modal
+            .pre_render(global_state, frame_storage);
+        self.new_tag_modal.pre_render(global_state, frame_storage);
         self.search_box_depend_on
             .pre_render(global_state, frame_storage);
 
@@ -158,7 +163,12 @@ impl Component for BasicTaskList {
         frame_storage.add_keybind(
             KEYBIND_TASK_ADD_DEPENDENCY.to_string(),
             "Add dependency",
-            true,
+            selected_task_id.is_some(),
+        );
+        frame_storage.add_keybind(
+            KEYBIND_TASK_RENAME.to_string(),
+            "Rename",
+            selected_task_id.is_some(),
         );
     }
 
@@ -206,8 +216,11 @@ impl Component for BasicTaskList {
         TaskInfoDisplay.render(frame, info_area, state, frame_storage);
 
         // if needed, render popups
-        self.task_popup.render(frame, area, state, frame_storage);
-        self.tag_popup.render(frame, area, state, frame_storage);
+        self.create_task_modal
+            .render(frame, area, state, frame_storage);
+        self.rename_task_modal
+            .render(frame, area, state, frame_storage);
+        self.new_tag_modal.render(frame, area, state, frame_storage);
         self.search_box_depend_on
             .render(frame, area, state, frame_storage);
     }
@@ -219,8 +232,13 @@ impl Component for BasicTaskList {
         frame_storage: &FrameLocalStorage,
     ) -> bool {
         // check modals
-        if self.task_popup.process_input(key, state, frame_storage)
-            || self.tag_popup.process_input(key, state, frame_storage)
+        if self
+            .create_task_modal
+            .process_input(key, state, frame_storage)
+            || self
+                .rename_task_modal
+                .process_input(key, state, frame_storage)
+            || self.new_tag_modal.process_input(key, state, frame_storage)
             || self
                 .search_box_depend_on
                 .process_input(key, state, frame_storage)
@@ -234,10 +252,10 @@ impl Component for BasicTaskList {
             self.index = self.index.clamp(0, tasks.len() - 1);
         }
 
-        if self.task_popup.is_open() {
+        if self.create_task_modal.is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(text) = self.task_popup.close() {
+                if let Some(text) = self.create_task_modal.close() {
                     state.database.tasks.add_node(Task::create_now(text));
 
                     // TODO: error handling. show popup on failure to save?
@@ -248,10 +266,26 @@ impl Component for BasicTaskList {
             } else {
                 false
             }
-        } else if self.tag_popup.is_open() {
+        } else if self.rename_task_modal.is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(text) = self.tag_popup.close() {
+                if let Some(text) = self.rename_task_modal.close() {
+                    let selected_task_id = tasks[self.index].0;
+                    let selected_task = &mut state.database.tasks[selected_task_id];
+                    selected_task.title = text;
+
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
+                }
+                true
+            } else {
+                false
+            }
+        } else if self.new_tag_modal.is_open() {
+            // popup is open
+            if key.code == KeyCode::Enter {
+                if let Some(text) = self.new_tag_modal.close() {
                     let selected_task_id = tasks[self.index].0;
                     let selected_task = &mut state.database.tasks[selected_task_id];
                     selected_task.tags.push(text);
@@ -306,7 +340,12 @@ impl Component for BasicTaskList {
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_NEW), KeyModifiers::NONE) => {
-                    self.task_popup.open();
+                    self.create_task_modal.open();
+                    true
+                }
+                (KeyCode::Char(KEYBIND_TASK_RENAME), KeyModifiers::NONE) => {
+                    self.rename_task_modal
+                        .open_with_text(tasks[self.index].1.title.clone());
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
@@ -324,7 +363,7 @@ impl Component for BasicTaskList {
                 (KeyCode::Char(KEYBIND_TASK_ADD_TAG), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // add tag to currently selected task
-                        self.tag_popup.open();
+                        self.new_tag_modal.open();
                     }
 
                     true

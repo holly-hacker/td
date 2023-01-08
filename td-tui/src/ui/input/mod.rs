@@ -31,6 +31,12 @@ impl TextBoxComponent {
     }
 
     #[must_use]
+    pub fn with_text(mut self, text: String) -> Self {
+        self.input = Input::from(text);
+        self
+    }
+
+    #[must_use]
     pub fn text(&self) -> &str {
         self.input.value()
     }

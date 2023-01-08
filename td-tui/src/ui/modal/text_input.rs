@@ -31,6 +31,9 @@ impl TextInputModal {
         self.input = Some(TextBoxComponent::new_focused());
     }
 
+    pub fn open_with_text(&mut self, input: String) {
+        self.input = Some(TextBoxComponent::new_focused().with_text(input));
+    }
     pub fn close(&mut self) -> Option<String> {
         self.input.take().map(|input| input.text().to_string())
     }
