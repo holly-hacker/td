@@ -20,7 +20,9 @@ use crate::{
         KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_NEW,
     },
     ui::{
-        constants::{COMPLETED_TASK, LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
+        constants::{
+            BOLD, COMPLETED_TASK, FG_GREEN, FG_RED, FG_WHITE, LIST_HIGHLIGHT_STYLE, LIST_STYLE,
+        },
         modal::{list_search::ListSearchModal, text_input::TextInputModal},
         task_info::TaskInfoDisplay,
         AppState, Component, FrameLocalStorage,
@@ -74,13 +76,46 @@ impl BasicTaskList {
         tasks
     }
 
-    fn task_to_span(&self, task: &Task) -> Spans {
+    fn task_to_span(&self, state: &AppState, task_index: &NodeIndex, task: &Task) -> Spans {
+        let mut spans = vec![];
+
+        let dependents_count = state
+            .database
+            .tasks
+            .edges_directed(*task_index, td_lib::petgraph::Direction::Incoming)
+            .count();
+        if dependents_count > 0 {
+            spans.push(Span::styled(
+                format!("{:>2}⤣", dependents_count.to_string()),
+                FG_GREEN.patch(BOLD),
+            ));
+        }
+
+        let dependency_count = state
+            .database
+            .tasks
+            .edges_directed(*task_index, td_lib::petgraph::Direction::Outgoing)
+            .count();
+        if dependency_count > 0 {
+            spans.push(Span::styled(
+                format!("{:>2}⤥", dependency_count.to_string()),
+                FG_RED.patch(BOLD),
+            ));
+        }
+
+        if dependency_count > 0 || dependents_count > 0 {
+            spans.push(Span::raw(" "));
+        }
+
+        // add title
         let text_style = if task.time_completed.is_some() {
             LIST_STYLE.patch(COMPLETED_TASK)
         } else {
             LIST_STYLE
         };
-        Spans::from(Span::styled(task.title.clone(), text_style))
+        spans.push(Span::styled(task.title.clone(), text_style));
+
+        spans.into()
     }
 }
 
@@ -145,12 +180,12 @@ impl Component for BasicTaskList {
                 "Basic Task List (oldest first)"
             })
             .borders(Borders::ALL)
-            .border_style(STANDARD_STYLE_FG_WHITE)
+            .border_style(FG_WHITE)
             .border_type(BorderType::Rounded);
 
         let list_items = task_list
             .iter()
-            .map(|t| ListItem::new(self.task_to_span(&t.1)))
+            .map(|t| ListItem::new(self.task_to_span(state, &t.0, &t.1)))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
             .block(block)

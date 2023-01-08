@@ -5,8 +5,22 @@ pub const MIN_MODAL_WIDTH: u16 = 32;
 
 pub const ACCENT_COLOR: Color = Color::LightBlue;
 
-pub const STANDARD_STYLE_FG_WHITE: Style = Style {
+pub const FG_WHITE: Style = Style {
     fg: Some(Color::White),
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+pub const FG_GREEN: Style = Style {
+    fg: Some(Color::Green),
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+pub const FG_RED: Style = Style {
+    fg: Some(Color::Red),
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
