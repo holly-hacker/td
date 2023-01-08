@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "data": {
+    "next_task_id": 0,
+    "tasks": {
+      "edge_property": "directed",
+      "edges": [
+        [
+          5,
+          3,
+          {}
+        ],
+        [
+          5,
+          7,
+          {}
+        ],
+        [
+          9,
+          10,
+          {}
+        ],
+        [
+          2,
+          11,
+          {}
+        ],
+        [
+          9,
+          13,
+          {}
+        ],
+        [
+          9,
+          12,
+          {}
+        ],
+        [
+          17,
+          1,
+          {}
+        ]
+      ],
+      "node_holes": [],
+      "nodes": [
+        {
+          "tags": [
+            "P:1"
+          ],
+          "time_created": "2023-01-07 22:36:27.9433541 +01:00:00",
+          "title": "Ask for confirmation on delete"
+        },
+        {
+          "tags": [
+            "P:0"
+          ],
+          "time_created": "2023-01-07 22:36:35.936483 +01:00:00",
+          "title": "Allow marking items as done"
+        },
+        {
+          "tags": [
+            "P:1"
+          ],
+          "time_created": "2023-01-07 22:39:41.5271079 +01:00:00",
+          "title": "Allow renaming tasks"
+        },
+        {
+          "tags": [
+            "P:2"
+          ],
+          "time_created": "2023-01-07 22:42:11.3189913 +01:00:00",
+          "title": "Create edit screen"
+        },
+        {
+          "tags": [
+            "P:1"
+          ],
+          "time_created": "2023-01-07 22:42:53.6149118 +01:00:00",
+          "title": "Add undo"
+        },
+        {
+          "tags": [
+            "P:1"
+          ],
+          "time_created": "2023-01-07 22:43:13.4708771 +01:00:00",
+          "title": "Allow giving tasks descriptions"
+        },
+        {
+          "tags": [
+            "P:3"
+          ],
+          "time_created": "2023-01-07 22:45:19.4307859 +01:00:00",
+          "title": "Allow quick-creating tasks with dependency/dependent task already linked"
+        },
+        {
+          "time_created": "2023-01-07 22:45:48.9987077 +01:00:00",
+          "title": "Add multi-line textbox component"
+        },
+        {
+          "tags": [
+            "P:3"
+          ],
+          "time_created": "2023-01-07 22:51:32.150391 +01:00:00",
+          "title": "Add global description to database"
+        },
+        {
+          "tags": [
+            "milestone",
+            "collection"
+          ],
+          "time_created": "2023-01-07 22:57:17.6378732 +01:00:00",
+          "title": "List: All Tasks"
+        },
+        {
+          "tags": [
+            "collection"
+          ],
+          "time_created": "2023-01-07 22:59:26.0616892 +01:00:00",
+          "title": "Allow sorting tasks"
+        },
+        {
+          "time_created": "2023-01-07 23:00:44.0378671 +01:00:00",
+          "title": "List of all tags"
+        },
+        {
+          "time_created": "2023-01-07 23:01:50.9975315 +01:00:00",
+          "title": "Show tags in list"
+        },
+        {
+          "time_created": "2023-01-07 23:01:57.7975317 +01:00:00",
+          "title": "Show dependency count in list"
+        },
+        {
+          "time_created": "2023-01-07 23:02:22.0695768 +01:00:00",
+          "title": "List: Dependency Tree"
+        },
+        {
+          "time_created": "2023-01-07 23:04:08.9813024 +01:00:00",
+          "title": "Move between tabs with TAB keybind"
+        },
+        {
+          "time_created": "2023-01-07 23:04:45.4777352 +01:00:00",
+          "title": "Allow filtering on tags"
+        },
+        {
+          "time_created": "2023-01-07 23:37:20.7870466 +01:00:00",
+          "title": "Filter completed tasks"
+        }
+      ]
+    }
+  }
+}
