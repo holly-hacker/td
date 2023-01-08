@@ -17,12 +17,31 @@ pub struct Database {
     pub tasks: StableDiGraph<Task, TaskDependency>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
+    /// A short description of this task.
     pub title: String,
+    /// When the task has been created.
     pub time_created: OffsetDateTime,
+    /// If the task has been completed, this is when that happened.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time_completed: Option<OffsetDateTime>,
+    /// A list of tags for this task.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
+}
+
+impl Task {
+    pub fn create_now(title: String) -> Self {
+        let time_created =
+            OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+        Self {
+            title,
+            time_created,
+            time_completed: None,
+            tags: vec![],
+        }
+    }
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]

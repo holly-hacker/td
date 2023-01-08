@@ -9,7 +9,7 @@ use tui::{
 };
 
 use crate::ui::{
-    constants::{BOLD, BOLD_UNDERLINED},
+    constants::{BOLD, BOLD_UNDERLINED, COMPLETED_TASK},
     AppState, Component, FrameLocalStorage,
 };
 
@@ -67,12 +67,12 @@ impl Component for TaskInfoDisplay {
             return;
         };
 
-        let time_local = task
-            .time_created
-            .to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
         let date_format =
             format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]")
                 .expect("valid hardcoded time format");
+        let time_local = task
+            .time_created
+            .to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
 
         // show useful info
         let mut spans = vec![
@@ -83,6 +83,15 @@ impl Component for TaskInfoDisplay {
                 Span::raw(time_local.format(&date_format).unwrap()),
             ]),
         ];
+
+        if let Some(completed_at) = &task.time_completed {
+            let time_local =
+                completed_at.to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
+            spans.push(Spans::from(vec![
+                Span::styled("Completed at ", BOLD),
+                Span::raw(time_local.format(&date_format).unwrap()),
+            ]));
+        }
 
         // add tags
         if !task.tags.is_empty() {
@@ -103,11 +112,16 @@ impl Component for TaskInfoDisplay {
                 Spans::from(Span::styled("Depends on:", BOLD)),
             ]);
 
-            spans.extend(
-                dependencies
-                    .iter()
-                    .map(|d_val| Spans::from(vec![Span::raw("- "), Span::raw(&d_val.title)])),
-            );
+            spans.extend(dependencies.iter().map(|task| {
+                Spans::from(vec![
+                    Span::raw("- "),
+                    if task.time_completed.is_some() {
+                        Span::styled(&task.title, COMPLETED_TASK)
+                    } else {
+                        Span::raw(&task.title)
+                    },
+                ])
+            }));
         }
 
         // add dependents
@@ -118,11 +132,16 @@ impl Component for TaskInfoDisplay {
                 Spans::from(Span::styled("Depended on by:", BOLD)),
             ]);
 
-            spans.extend(
-                dependents
-                    .iter()
-                    .map(|d_val| Spans::from(vec![Span::raw("- "), Span::raw(&d_val.title)])),
-            );
+            spans.extend(dependents.iter().map(|task| {
+                Spans::from(vec![
+                    Span::raw("- "),
+                    if task.time_completed.is_some() {
+                        Span::styled(&task.title, COMPLETED_TASK)
+                    } else {
+                        Span::raw(&task.title)
+                    },
+                ])
+            }));
         }
 
         let paragraph = Paragraph::new(spans);

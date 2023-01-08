@@ -26,6 +26,13 @@ pub const BOLD_UNDERLINED: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
+pub const COMPLETED_TASK: Style = Style {
+    fg: Some(Color::DarkGray),
+    bg: None,
+    add_modifier: Modifier::ITALIC.union(Modifier::CROSSED_OUT),
+    sub_modifier: Modifier::empty(),
+};
+
 /// The style for unselected list items
 pub const LIST_STYLE: Style = Style {
     fg: Some(Color::Gray),

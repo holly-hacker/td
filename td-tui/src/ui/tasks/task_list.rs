@@ -9,16 +9,18 @@ use td_lib::{
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
+    text::{Span, Spans},
     widgets::{Block, BorderType, Borders, List, ListItem, ListState},
     Frame,
 };
 
 use crate::{
     keybinds::{
-        KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE, KEYBIND_TASK_NEW,
+        KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE,
+        KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_NEW,
     },
     ui::{
-        constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
+        constants::{COMPLETED_TASK, LIST_HIGHLIGHT_STYLE, LIST_STYLE, STANDARD_STYLE_FG_WHITE},
         modal::{list_search::ListSearchModal, text_input::TextInputModal},
         task_info::TaskInfoDisplay,
         AppState, Component, FrameLocalStorage,
@@ -46,10 +48,7 @@ impl BasicTaskList {
         }
     }
 
-    fn get_sorted_task_list<'state>(
-        &self,
-        state: &'state AppState,
-    ) -> Vec<(NodeIndex, &'state Task)> {
+    fn get_sorted_task_list(&self, state: &AppState) -> Vec<(NodeIndex, Task)> {
         let mut tasks = state
             .database
             .tasks
@@ -61,6 +60,7 @@ impl BasicTaskList {
                         .database
                         .tasks
                         .node_weight(i)
+                        .cloned()
                         .expect("should find weight for NodeIndex"),
                 )
             })
@@ -72,6 +72,15 @@ impl BasicTaskList {
         }
 
         tasks
+    }
+
+    fn task_to_span(&self, task: &Task) -> Spans {
+        let text_style = if task.time_completed.is_some() {
+            LIST_STYLE.patch(COMPLETED_TASK)
+        } else {
+            LIST_STYLE
+        };
+        Spans::from(Span::styled(task.title.clone(), text_style))
     }
 }
 
@@ -88,9 +97,22 @@ impl Component for BasicTaskList {
             .pre_render(global_state, frame_storage);
 
         frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
+        frame_storage.add_keybind(
+            KEYBIND_TASK_MARK_DONE.to_string(),
+            "Mask as done",
+            selected_task_id.is_some(),
+        );
         frame_storage.add_keybind(KEYBIND_TASK_NEW.to_string(), "New task", true);
-        frame_storage.add_keybind(KEYBIND_TASK_DELETE.to_string(), "Delete task", true);
-        frame_storage.add_keybind(KEYBIND_TASK_ADD_TAG.to_string(), "Add tag", true);
+        frame_storage.add_keybind(
+            KEYBIND_TASK_DELETE.to_string(),
+            "Delete task",
+            selected_task_id.is_some(),
+        );
+        frame_storage.add_keybind(
+            KEYBIND_TASK_ADD_TAG.to_string(),
+            "Add tag",
+            selected_task_id.is_some(),
+        );
         frame_storage.add_keybind(
             KEYBIND_TASK_ADD_DEPENDENCY.to_string(),
             "Add dependency",
@@ -128,7 +150,7 @@ impl Component for BasicTaskList {
 
         let list_items = task_list
             .iter()
-            .map(|t| ListItem::new(t.1.title.clone()))
+            .map(|t| ListItem::new(self.task_to_span(&t.1)))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
             .block(block)
@@ -174,14 +196,7 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.task_popup.close() {
-                    let time_created =
-                        OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
-                    let task = Task {
-                        title: text,
-                        time_created,
-                        tags: vec![],
-                    };
-                    state.database.tasks.add_node(task);
+                    state.database.tasks.add_node(Task::create_now(text));
 
                     // TODO: error handling. show popup on failure to save?
                     let db_info: DatabaseInfo = (&state.database).into();
@@ -231,6 +246,23 @@ impl Component for BasicTaskList {
         } else {
             // take our own input
             match (key.code, key.modifiers) {
+                (KeyCode::Char(KEYBIND_TASK_MARK_DONE), KeyModifiers::NONE) => {
+                    let task = &mut state.database.tasks[tasks[self.index].0];
+                    if task.time_completed.is_none() {
+                        task.time_completed = Some(
+                            OffsetDateTime::now_local()
+                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                        );
+                    } else {
+                        task.time_completed = None;
+                    }
+
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
+
+                    true
+                }
                 (KeyCode::Char(KEYBIND_TASK_NEW), KeyModifiers::NONE) => {
                     self.task_popup.open();
                     true
@@ -257,7 +289,7 @@ impl Component for BasicTaskList {
                 }
                 (KeyCode::Char(KEYBIND_TASK_ADD_DEPENDENCY), KeyModifiers::NONE) => {
                     // link to other task
-                    let selected = tasks[self.index];
+                    let selected = &tasks[self.index];
                     let tasks = tasks
                         .iter()
                         .filter(|t| t.0 != selected.0)
