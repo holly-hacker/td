@@ -1,7 +1,7 @@
 use tui::{
     symbols,
     text::{Span, Spans},
-    widgets::Paragraph,
+    widgets::{Paragraph, Wrap},
 };
 
 use super::{
@@ -58,7 +58,7 @@ impl Component for KeybindList {
             is_first = false;
         }
 
-        let paragraph = Paragraph::new(Spans::from(spans));
+        let paragraph = Paragraph::new(Spans::from(spans)).wrap(Wrap { trim: true });
         frame.render_widget(paragraph, area);
     }
 

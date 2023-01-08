@@ -168,8 +168,8 @@ impl Component for LayoutRoot {
         state: &AppState,
         frame_storage: &FrameLocalStorage,
     ) {
-        let area_tabs = area.skip_last_y(1);
-        let area_keybinds = area.take_last_y(1);
+        let area_tabs = area.skip_last_y(2);
+        let area_keybinds = area.take_last_y(2);
         self.tabs.render(frame, area_tabs, state, frame_storage);
 
         KeybindList.render(frame, area_keybinds, state, frame_storage);
