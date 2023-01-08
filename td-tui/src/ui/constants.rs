@@ -47,13 +47,6 @@ pub const ITALIC: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
-pub const BOLD_UNDERLINED: Style = Style {
-    fg: None,
-    bg: None,
-    add_modifier: Modifier::BOLD.union(Modifier::UNDERLINED),
-    sub_modifier: Modifier::empty(),
-};
-
 pub const COMPLETED_TASK: Style = Style {
     fg: Some(Color::DarkGray),
     bg: None,

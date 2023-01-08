@@ -5,11 +5,11 @@ use td_lib::{
 };
 use tui::{
     text::{Span, Spans},
-    widgets::Paragraph,
+    widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 use crate::ui::{
-    constants::{BOLD, BOLD_UNDERLINED, COMPLETED_TASK},
+    constants::{BOLD, COMPLETED_TASK},
     AppState, Component, FrameLocalStorage,
 };
 
@@ -57,13 +57,18 @@ impl Component for TaskInfoDisplay {
         state: &AppState,
         frame_storage: &FrameLocalStorage,
     ) {
+        let block = Block::default()
+            .title("Task Info")
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded);
+
         let Some(node_index) = frame_storage.selected_task_index else {
-            frame.render_widget(Paragraph::new("No task selected"), area);
+            frame.render_widget(Paragraph::new("No task selected").block(block), area);
             return;
         };
 
         let Some(task) = state.database.tasks.node_weight(node_index) else {
-            frame.render_widget(Paragraph::new("Error: Task not found"), area);
+            frame.render_widget(Paragraph::new("Error: Task not found").block(block), area);
             return;
         };
 
@@ -76,7 +81,6 @@ impl Component for TaskInfoDisplay {
 
         // show useful info
         let mut spans = vec![
-            Spans::from(Span::styled("Task info", BOLD_UNDERLINED)),
             Spans::from(vec![Span::styled("Name: ", BOLD), Span::raw(&task.title)]),
             Spans::from(vec![
                 Span::styled("Created: ", BOLD),
@@ -144,7 +148,7 @@ impl Component for TaskInfoDisplay {
             }));
         }
 
-        let paragraph = Paragraph::new(spans);
+        let paragraph = Paragraph::new(spans).block(block);
         frame.render_widget(paragraph, area);
     }
 
