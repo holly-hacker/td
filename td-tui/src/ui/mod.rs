@@ -9,7 +9,7 @@ use td_lib::{
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 
 use self::{keybind_list::KeybindList, tab_layout::TabLayout, tasks::task_list::BasicTaskList};
-use crate::utils::RectExt;
+use crate::utils::{wrap_spans, RectExt};
 
 mod constants;
 mod input;
@@ -168,8 +168,10 @@ impl Component for LayoutRoot {
         state: &AppState,
         frame_storage: &FrameLocalStorage,
     ) {
-        let area_tabs = area.skip_last_y(2);
-        let area_keybinds = area.take_last_y(2);
+        let height = wrap_spans(KeybindList::get_spans(frame_storage), area.width).len() as u16;
+
+        let area_tabs = area.skip_last_y(height);
+        let area_keybinds = area.take_last_y(height);
         self.tabs.render(frame, area_tabs, state, frame_storage);
 
         KeybindList.render(frame, area_keybinds, state, frame_storage);

@@ -1,4 +1,7 @@
-use tui::layout::Rect;
+use tui::{
+    layout::Rect,
+    text::{Span, Spans},
+};
 
 pub trait RectExt {
     /// Creates a new rect with the given width, starting at the same origin.
@@ -58,6 +61,29 @@ impl RectExt for Rect {
             height,
         }
     }
+}
+
+pub fn wrap_spans<'span>(
+    spans: impl IntoIterator<Item = Span<'span>>,
+    width: u16,
+) -> Vec<Spans<'span>> {
+    let mut current_width = 0;
+
+    let mut ret = vec![Spans::default()];
+
+    for span in spans {
+        let span_len = span.content.len();
+
+        if (current_width + span_len) as u16 > width {
+            current_width = 0;
+            ret.push(Spans::default());
+        }
+
+        current_width += span_len;
+        ret.last_mut().unwrap().0.push(span);
+    }
+
+    ret
 }
 
 #[cfg(test)]

@@ -1,8 +1,4 @@
-use tui::{
-    symbols,
-    text::{Span, Spans},
-    widgets::{Paragraph, Wrap},
-};
+use tui::{symbols, text::Span, widgets::Paragraph};
 
 use super::{
     constants::{
@@ -10,26 +6,13 @@ use super::{
     },
     Component,
 };
+use crate::utils::wrap_spans;
 
 pub struct KeybindList;
 
-impl Component for KeybindList {
-    fn pre_render(
-        &self,
-        _global_state: &super::AppState,
-        _frame_storage: &mut super::FrameLocalStorage,
-    ) {
-    }
-
-    fn render(
-        &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
-        _state: &super::AppState,
-        frame_storage: &super::FrameLocalStorage,
-    ) {
+impl KeybindList {
+    pub fn get_spans(frame_storage: &super::FrameLocalStorage) -> Vec<Span> {
         let keybinds = &frame_storage.current_keybinds;
-
         let mut spans = vec![];
 
         let mut is_first = true;
@@ -58,7 +41,27 @@ impl Component for KeybindList {
             is_first = false;
         }
 
-        let paragraph = Paragraph::new(Spans::from(spans)).wrap(Wrap { trim: true });
+        spans
+    }
+}
+
+impl Component for KeybindList {
+    fn pre_render(
+        &self,
+        _global_state: &super::AppState,
+        _frame_storage: &mut super::FrameLocalStorage,
+    ) {
+    }
+
+    fn render(
+        &self,
+        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: tui::layout::Rect,
+        _state: &super::AppState,
+        frame_storage: &super::FrameLocalStorage,
+    ) {
+        let spans = wrap_spans(Self::get_spans(frame_storage), area.width);
+        let paragraph = Paragraph::new(spans);
         frame.render_widget(paragraph, area);
     }
 
