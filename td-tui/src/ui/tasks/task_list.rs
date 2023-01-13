@@ -146,7 +146,7 @@ impl Component for BasicTaskList {
         frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
         frame_storage.add_keybind(
             KEYBIND_TASK_MARK_DONE.to_string(),
-            "Mask as done",
+            "Mark as done",
             selected_task_id.is_some(),
         );
         frame_storage.add_keybind(KEYBIND_TASK_NEW.to_string(), "New task", true);
