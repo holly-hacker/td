@@ -1,298 +1,264 @@
 {
   "version": 1,
   "data": {
-    "tasks": {
-      "edge_property": "directed",
-      "edges": [
-        [
-          5,
-          3,
-          {}
-        ],
-        [
-          5,
-          7,
-          {}
-        ],
-        [
-          9,
-          10,
-          {}
-        ],
-        [
-          2,
-          11,
-          {}
-        ],
-        [
-          9,
-          13,
-          {}
-        ],
-        [
-          9,
-          12,
-          {}
-        ],
-        [
-          17,
-          1,
-          {}
-        ],
-        [
-          18,
-          14,
-          {}
-        ],
-        [
-          18,
-          9,
-          {}
-        ],
-        [
-          18,
-          4,
-          {}
-        ],
-        [
-          18,
-          0,
-          {}
-        ],
-        [
-          18,
-          3,
-          {}
-        ],
-        [
-          18,
-          5,
-          {}
-        ],
-        [
-          8,
-          7,
-          {}
-        ],
-        [
-          18,
-          19,
-          {}
-        ],
-        [
-          18,
-          21,
-          {}
-        ],
-        [
-          18,
-          20,
-          {}
-        ],
-        [
-          18,
-          15,
-          {}
-        ],
-        [
-          9,
-          17,
-          {}
-        ],
-        [
-          18,
-          24,
-          {}
-        ],
-        [
-          26,
-          7,
-          {}
+    "tasks": [
+      {
+        "id": "B4TTuCe4",
+        "title": "Ask for confirmation on delete",
+        "time_created": "2023-01-07 22:36:27.9433541 +01:00:00",
+        "tags": [
+          "P:1"
         ]
-      ],
-      "node_holes": [],
-      "nodes": [
-        {
-          "tags": [
-            "P:1"
-          ],
-          "time_created": "2023-01-07 22:36:27.9433541 +01:00:00",
-          "title": "Ask for confirmation on delete"
-        },
-        {
-          "tags": [
-            "P:0"
-          ],
-          "time_completed": "2023-01-08 12:30:31.8730608 +01:00:00",
-          "time_created": "2023-01-07 22:36:35.936483 +01:00:00",
-          "title": "Allow marking items as done"
-        },
-        {
-          "tags": [
-            "P:1"
-          ],
-          "time_completed": "2023-01-08 14:14:56.9451048 +01:00:00",
-          "time_created": "2023-01-07 22:39:41.5271079 +01:00:00",
-          "title": "Allow renaming tasks"
-        },
-        {
-          "tags": [
-            "P:2"
-          ],
-          "time_created": "2023-01-07 22:42:11.3189913 +01:00:00",
-          "title": "Create edit screen"
-        },
-        {
-          "tags": [
-            "P:1"
-          ],
-          "time_created": "2023-01-07 22:42:53.6149118 +01:00:00",
-          "title": "Add undo"
-        },
-        {
-          "tags": [
-            "P:1"
-          ],
-          "time_created": "2023-01-07 22:43:13.4708771 +01:00:00",
-          "title": "Allow giving tasks descriptions"
-        },
-        {
-          "tags": [
-            "P:3"
-          ],
-          "time_created": "2023-01-07 22:45:19.4307859 +01:00:00",
-          "title": "Allow quick-creating tasks with dependency/dependent task already linked"
-        },
-        {
-          "time_completed": "2023-01-14 11:25:06.8333038 +01:00:00",
-          "time_created": "2023-01-07 22:45:48.9987077 +01:00:00",
-          "title": "Add multi-line textbox component"
-        },
-        {
-          "tags": [
-            "P:3"
-          ],
-          "time_created": "2023-01-07 22:51:32.150391 +01:00:00",
-          "title": "Add global description to database"
-        },
-        {
-          "tags": [
-            "milestone",
-            "collection"
-          ],
-          "time_created": "2023-01-07 22:57:17.6378732 +01:00:00",
-          "title": "List: All Tasks"
-        },
-        {
-          "tags": [
-            "collection"
-          ],
-          "time_created": "2023-01-07 22:59:26.0616892 +01:00:00",
-          "title": "Allow sorting tasks"
-        },
-        {
-          "time_created": "2023-01-07 23:00:44.0378671 +01:00:00",
-          "title": "List of all tags"
-        },
-        {
-          "time_completed": "2023-01-08 13:22:06.7212452 +01:00:00",
-          "time_created": "2023-01-07 23:01:50.9975315 +01:00:00",
-          "title": "Show tags inline in task list"
-        },
-        {
-          "time_completed": "2023-01-08 13:16:25.5060075 +01:00:00",
-          "time_created": "2023-01-07 23:01:57.7975317 +01:00:00",
-          "title": "Show dependency count in list"
-        },
-        {
-          "tags": [
-            "milestone"
-          ],
-          "time_created": "2023-01-07 23:02:22.0695768 +01:00:00",
-          "title": "List: Dependency Tree"
-        },
-        {
-          "time_completed": "2023-01-08 14:00:12.7394662 +01:00:00",
-          "time_created": "2023-01-07 23:04:08.9813024 +01:00:00",
-          "title": "Move between tabs with TAB keybind"
-        },
-        {
-          "time_created": "2023-01-07 23:04:45.4777352 +01:00:00",
-          "title": "Allow filtering on tags"
-        },
-        {
-          "time_created": "2023-01-07 23:37:20.7870466 +01:00:00",
-          "title": "Filter completed tasks"
-        },
-        {
-          "tags": [
-            "milestone"
-          ],
-          "time_created": "2023-01-08 13:05:26.5877012 +01:00:00",
-          "title": "Release: v0.1"
-        },
-        {
-          "time_created": "2023-01-08 13:11:45.026854 +01:00:00",
-          "title": "Change from instant change to explicit save"
-        },
-        {
-          "time_created": "2023-01-08 13:13:26.6745231 +01:00:00",
-          "title": "Add search for tag in task list"
-        },
-        {
-          "time_created": "2023-01-08 13:14:03.1784967 +01:00:00",
-          "title": "Allow creating dependency in opposite direction"
-        },
-        {
-          "tags": [
-            "P:3"
-          ],
-          "time_created": "2023-01-08 13:44:41.2939962 +01:00:00",
-          "title": "Show warning if new dependency will make graph cyclic"
-        },
-        {
-          "tags": [
-            "P:1"
-          ],
-          "time_created": "2023-01-08 13:46:46.3254092 +01:00:00",
-          "title": "Improve how shortcuts are handled internally"
-        },
-        {
-          "tags": [
-            "P:1"
-          ],
-          "time_created": "2023-01-08 13:59:37.4034566 +01:00:00",
-          "title": "Add search for task in task list"
-        },
-        {
-          "tags": [
-            "P:3"
-          ],
-          "time_created": "2023-01-08 14:07:09.9546943 +01:00:00",
-          "title": "Allow exporting database to GraphViz file"
-        },
-        {
-          "time_created": "2023-01-14 11:25:39.3772153 +01:00:00",
-          "title": "Allow entering newlines in multi-line textbox"
-        },
-        {
-          "time_completed": "2023-01-14 11:55:31.3967567 +01:00:00",
-          "time_created": "2023-01-14 11:27:25.4810338 +01:00:00",
-          "title": "Don't show completed tasks in dependency icon in task list"
-        },
-        {
-          "tags": [
-            "P:2"
-          ],
-          "time_created": "2023-01-14 11:28:42.2167957 +01:00:00",
-          "title": "Allow filtering using custom search queries (custom syntax)"
-        },
-        {
-          "time_completed": "2023-01-14 12:23:08.9607203 +01:00:00",
-          "time_created": "2023-01-14 12:23:07.7447062 +01:00:00",
-          "title": "Allow tracking started tasks"
-        }
-      ]
-    }
+      },
+      {
+        "id": "XbTzd746",
+        "title": "Allow marking items as done",
+        "time_created": "2023-01-07 22:36:35.936483 +01:00:00",
+        "time_completed": "2023-01-08 12:30:31.8730608 +01:00:00",
+        "tags": [
+          "P:0"
+        ]
+      },
+      {
+        "dependencies": [
+          "cb9PHuuB"
+        ],
+        "id": "AFkNkXQ9",
+        "title": "Allow renaming tasks",
+        "time_created": "2023-01-07 22:39:41.5271079 +01:00:00",
+        "time_completed": "2023-01-08 14:14:56.9451048 +01:00:00",
+        "tags": [
+          "P:1"
+        ]
+      },
+      {
+        "id": "pFe2UwKF",
+        "title": "Create edit screen",
+        "time_created": "2023-01-07 22:42:11.3189913 +01:00:00",
+        "tags": [
+          "P:2"
+        ]
+      },
+      {
+        "dependencies": [
+          "efpheffd"
+        ],
+        "id": "Dxg78UdW",
+        "title": "Add undo",
+        "time_created": "2023-01-07 22:42:53.6149118 +01:00:00",
+        "tags": [
+          "P:1"
+        ]
+      },
+      {
+        "dependencies": [
+          "pFe2UwKF",
+          "8Z3SV7ow"
+        ],
+        "id": "rhxJqctK",
+        "title": "Allow giving tasks descriptions",
+        "time_created": "2023-01-07 22:43:13.4708771 +01:00:00",
+        "tags": [
+          "P:1"
+        ]
+      },
+      {
+        "id": "3W3wd4F5",
+        "title": "Allow quick-creating tasks with dependency/dependent task already linked",
+        "time_created": "2023-01-07 22:45:19.4307859 +01:00:00",
+        "tags": [
+          "P:3"
+        ]
+      },
+      {
+        "id": "8Z3SV7ow",
+        "title": "Add multi-line textbox component",
+        "time_created": "2023-01-07 22:45:48.9987077 +01:00:00",
+        "time_completed": "2023-01-14 11:25:06.8333038 +01:00:00"
+      },
+      {
+        "dependencies": [
+          "8Z3SV7ow"
+        ],
+        "id": "fnwbChpv",
+        "title": "Add global description to database",
+        "time_created": "2023-01-07 22:51:32.150391 +01:00:00",
+        "tags": [
+          "P:3"
+        ]
+      },
+      {
+        "dependencies": [
+          "h8TABGYW",
+          "c2UpBjrw",
+          "4eGUEuuq",
+          "ryB8Jh8G"
+        ],
+        "id": "tkjvahjh",
+        "title": "List: All Tasks",
+        "time_created": "2023-01-07 22:57:17.6378732 +01:00:00",
+        "tags": [
+          "milestone",
+          "collection"
+        ]
+      },
+      {
+        "id": "h8TABGYW",
+        "title": "Allow sorting tasks",
+        "time_created": "2023-01-07 22:59:26.0616892 +01:00:00",
+        "tags": [
+          "collection"
+        ]
+      },
+      {
+        "id": "cb9PHuuB",
+        "title": "List of all tags",
+        "time_created": "2023-01-07 23:00:44.0378671 +01:00:00"
+      },
+      {
+        "id": "4eGUEuuq",
+        "title": "Show tags inline in task list",
+        "time_created": "2023-01-07 23:01:50.9975315 +01:00:00",
+        "time_completed": "2023-01-08 13:22:06.7212452 +01:00:00"
+      },
+      {
+        "id": "c2UpBjrw",
+        "title": "Show dependency count in list",
+        "time_created": "2023-01-07 23:01:57.7975317 +01:00:00",
+        "time_completed": "2023-01-08 13:16:25.5060075 +01:00:00"
+      },
+      {
+        "id": "ru8CHT7R",
+        "title": "List: Dependency Tree",
+        "time_created": "2023-01-07 23:02:22.0695768 +01:00:00",
+        "tags": [
+          "milestone"
+        ]
+      },
+      {
+        "id": "NWx5xSbu",
+        "title": "Move between tabs with TAB keybind",
+        "time_created": "2023-01-07 23:04:08.9813024 +01:00:00",
+        "time_completed": "2023-01-08 14:00:12.7394662 +01:00:00"
+      },
+      {
+        "id": "4vuB4UFm",
+        "title": "Allow filtering on tags",
+        "time_created": "2023-01-07 23:04:45.4777352 +01:00:00"
+      },
+      {
+        "dependencies": [
+          "XbTzd746"
+        ],
+        "id": "ryB8Jh8G",
+        "title": "Filter completed tasks",
+        "time_created": "2023-01-07 23:37:20.7870466 +01:00:00"
+      },
+      {
+        "dependencies": [
+          "ru8CHT7R",
+          "tkjvahjh",
+          "Dxg78UdW",
+          "B4TTuCe4",
+          "pFe2UwKF",
+          "rhxJqctK",
+          "efpheffd",
+          "eKzNxosK",
+          "9zWUdmYW",
+          "NWx5xSbu",
+          "HMpzpjaz",
+          "QqDZhxfy",
+          "EUwBK6eK"
+        ],
+        "id": "SkHpVbJS",
+        "title": "Release: v0.1",
+        "time_created": "2023-01-08 13:05:26.5877012 +01:00:00",
+        "tags": [
+          "milestone"
+        ]
+      },
+      {
+        "id": "efpheffd",
+        "title": "Change from instant change to explicit save",
+        "time_created": "2023-01-08 13:11:45.026854 +01:00:00"
+      },
+      {
+        "id": "9zWUdmYW",
+        "title": "Add search for tag in task list",
+        "time_created": "2023-01-08 13:13:26.6745231 +01:00:00"
+      },
+      {
+        "id": "eKzNxosK",
+        "title": "Allow creating dependency in opposite direction",
+        "time_created": "2023-01-08 13:14:03.1784967 +01:00:00"
+      },
+      {
+        "id": "xLNDMA2E",
+        "title": "Show warning if new dependency will make graph cyclic",
+        "time_created": "2023-01-08 13:44:41.2939962 +01:00:00",
+        "tags": [
+          "P:3"
+        ]
+      },
+      {
+        "id": "hcw6jDDv",
+        "title": "Improve how shortcuts are handled internally",
+        "time_created": "2023-01-08 13:46:46.3254092 +01:00:00",
+        "tags": [
+          "P:1"
+        ]
+      },
+      {
+        "id": "HMpzpjaz",
+        "title": "Add search for task in task list",
+        "time_created": "2023-01-08 13:59:37.4034566 +01:00:00",
+        "tags": [
+          "P:1"
+        ]
+      },
+      {
+        "id": "HQr5KZdE",
+        "title": "Allow exporting database to GraphViz file",
+        "time_created": "2023-01-08 14:07:09.9546943 +01:00:00",
+        "tags": [
+          "P:3"
+        ]
+      },
+      {
+        "dependencies": [
+          "8Z3SV7ow"
+        ],
+        "id": "C7apkN6M",
+        "title": "Allow entering newlines in multi-line textbox",
+        "time_created": "2023-01-14 11:25:39.3772153 +01:00:00"
+      },
+      {
+        "id": "8YYs3WNJ",
+        "title": "Don't show completed tasks in dependency icon in task list",
+        "time_created": "2023-01-14 11:27:25.4810338 +01:00:00",
+        "time_completed": "2023-01-14 11:55:31.3967567 +01:00:00"
+      },
+      {
+        "id": "sj7FSZwa",
+        "title": "Allow filtering using custom search queries (custom syntax)",
+        "time_created": "2023-01-14 11:28:42.2167957 +01:00:00",
+        "tags": [
+          "P:2"
+        ]
+      },
+      {
+        "id": "EUwBK6eK",
+        "title": "Allow tracking started tasks",
+        "time_created": "2023-01-14 12:23:07.7447062 +01:00:00",
+        "time_completed": "2023-01-14 12:23:08.9607203 +01:00:00"
+      },
+      {
+        "id": "QqDZhxfy",
+        "title": "Save clean database model to disk",
+        "time_created": "2023-01-14 13:18:34.8484239 +01:00:00",
+        "time_started": "2023-01-14 13:18:38.3764893 +01:00:00",
+        "time_completed": "2023-01-14 14:17:12.6239111 +01:00:00"
+      }
+    ]
   }
 }
