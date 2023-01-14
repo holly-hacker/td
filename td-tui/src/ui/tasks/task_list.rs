@@ -40,6 +40,8 @@ pub struct BasicTaskList {
 }
 
 impl BasicTaskList {
+    const SCROLL_PAGE_UP_DOWN: usize = 32;
+
     pub fn new(reverse: bool) -> Self {
         Self {
             index: 0,
@@ -389,6 +391,27 @@ impl Component for BasicTaskList {
                 (KeyCode::Down, KeyModifiers::NONE) => {
                     if !tasks.is_empty() && self.index != tasks.len() - 1 {
                         self.index += 1;
+                    }
+                    true
+                }
+                (KeyCode::PageUp, KeyModifiers::NONE) => {
+                    self.index = self.index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
+                    true
+                }
+                (KeyCode::PageDown, KeyModifiers::NONE) => {
+                    if !tasks.is_empty() && self.index != tasks.len() - 1 {
+                        self.index += Self::SCROLL_PAGE_UP_DOWN;
+                        self.index = self.index.min(tasks.len() - 1);
+                    }
+                    true
+                }
+                (KeyCode::Home, KeyModifiers::NONE) => {
+                    self.index = 0;
+                    true
+                }
+                (KeyCode::End, KeyModifiers::NONE) => {
+                    if !tasks.is_empty() && self.index != tasks.len() - 1 {
+                        self.index = tasks.len() - 1;
                     }
                     true
                 }
