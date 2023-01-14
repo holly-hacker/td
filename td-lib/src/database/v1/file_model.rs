@@ -14,15 +14,15 @@ impl From<Database> for DatabaseDiskModel {
         let mut list = vec![];
 
         // collect nodes
-        for node_idx in value.tasks.node_indices() {
-            let node_weight = value.tasks[node_idx].clone();
+        for node_idx in value.graph.node_indices() {
+            let node_weight = value.graph[node_idx].clone();
             list.push((node_idx, TaskDiskModel::new(node_weight)));
         }
 
         // collect edges
-        for edge_idx in value.tasks.edge_indices() {
+        for edge_idx in value.graph.edge_indices() {
             let (start_index, end_index) = value
-                .tasks
+                .graph
                 .edge_endpoints(edge_idx)
                 .expect("each edge should be connected");
 
@@ -68,7 +68,7 @@ impl From<DatabaseDiskModel> for Database {
         }
 
         Self {
-            tasks: graph,
+            graph,
             task_id_to_index: id_index_map,
         }
     }

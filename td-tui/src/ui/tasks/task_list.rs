@@ -68,7 +68,7 @@ impl BasicTaskList {
     fn task_to_span(&self, state: &AppState, task: &Task) -> Spans {
         let mut spans = vec![];
 
-        let dependents_count = state.database.get_inverse_dependencies(&task.id).count();
+        let dependents_count = state.database.get_inverse_dependencies(task.id()).count();
         if dependents_count > 0 {
             spans.push(Span::styled(
                 format!("{:>2}⤣", dependents_count.to_string()),
@@ -78,7 +78,7 @@ impl BasicTaskList {
 
         let unfullfilled_dependency_count = state
             .database
-            .get_dependencies(&task.id)
+            .get_dependencies(task.id())
             .filter(|t| t.time_completed.is_none())
             .count();
 
@@ -117,7 +117,7 @@ impl Component for BasicTaskList {
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
         // store currently selected task in frame storage
         let task_list = self.get_sorted_task_list(global_state);
-        frame_storage.selected_task_id = task_list.get(self.index).map(|x| x.id.clone());
+        frame_storage.selected_task_id = task_list.get(self.index).map(|x| x.id().clone());
 
         self.create_task_modal
             .pre_render(global_state, frame_storage);
@@ -256,7 +256,7 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.rename_task_modal.close() {
-                    let selected_task = &mut state.database[&tasks[self.index].id];
+                    let selected_task = &mut state.database[tasks[self.index].id()];
                     selected_task.title = text;
 
                     state.mark_database_dirty();
@@ -269,7 +269,7 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.new_tag_modal.close() {
-                    let selected_task = &mut state.database[&tasks[self.index].id];
+                    let selected_task = &mut state.database[tasks[self.index].id()];
                     selected_task.tags.push(text);
 
                     state.mark_database_dirty();
@@ -284,7 +284,7 @@ impl Component for BasicTaskList {
                 if let Some(selected_task_id) = self.search_box_depend_on.close() {
                     state
                         .database
-                        .add_dependency(&tasks[self.index].id, &selected_task_id);
+                        .add_dependency(tasks[self.index].id(), &selected_task_id);
 
                     state.mark_database_dirty();
                 }
@@ -297,7 +297,7 @@ impl Component for BasicTaskList {
             // take our own input
             match (key.code, key.modifiers) {
                 (KeyCode::Char(KEYBIND_TASK_MARK_STARTED), KeyModifiers::NONE) => {
-                    let task = &mut state.database[&tasks[self.index].id];
+                    let task = &mut state.database[tasks[self.index].id()];
                     if task.time_started.is_none() {
                         task.time_started = Some(
                             OffsetDateTime::now_local()
@@ -312,7 +312,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_MARK_DONE), KeyModifiers::NONE) => {
-                    let task = &mut state.database[&tasks[self.index].id];
+                    let task = &mut state.database[tasks[self.index].id()];
                     if task.time_completed.is_none() {
                         task.time_completed = Some(
                             OffsetDateTime::now_local()
@@ -338,7 +338,7 @@ impl Component for BasicTaskList {
                 (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // delete
-                        state.database.remove_task(&tasks[self.index].id);
+                        state.database.remove_task(tasks[self.index].id());
                         state.mark_database_dirty();
                     }
 
@@ -357,14 +357,14 @@ impl Component for BasicTaskList {
                     let selected = &tasks[self.index];
                     let existing_dependency_ids = state
                         .database
-                        .get_dependencies(&selected.id)
-                        .map(|x| x.id.clone())
+                        .get_dependencies(selected.id())
+                        .map(|x| x.id().clone())
                         .collect::<HashSet<_>>();
                     let candidate_tasks = tasks
                         .iter()
-                        .filter(|t| t.id != selected.id)
-                        .filter(|candidate| !existing_dependency_ids.contains(&candidate.id))
-                        .map(|w| (w.id.clone(), w.title.clone()))
+                        .filter(|t| t.id() != selected.id())
+                        .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
+                        .map(|w| (w.id().clone(), w.title.clone()))
                         .collect();
                     self.search_box_depend_on.open(candidate_tasks);
                     true

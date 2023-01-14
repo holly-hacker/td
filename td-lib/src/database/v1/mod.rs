@@ -17,7 +17,7 @@ pub struct Database {
     ///
     /// This uses a StableDiGraph to keep a stable order, which means insertions and removals will
     /// not cause large changes to the database file.
-    pub(crate) tasks: StableDiGraph<Task, TaskDependency>,
+    pub(crate) graph: StableDiGraph<Task, TaskDependency>,
 
     /// A lookup cache
     pub(crate) task_id_to_index: HashMap<TaskId, NodeIndex>,
@@ -26,7 +26,7 @@ pub struct Database {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     /// A unique id for this task
-    pub id: TaskId,
+    pub(crate) id: TaskId,
     /// A short description of this task.
     pub title: String,
     /// When the task has been created.
