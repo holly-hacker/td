@@ -1,3 +1,5 @@
+//! Types related to the task database.
+
 mod database_api;
 pub mod database_file;
 mod v1;

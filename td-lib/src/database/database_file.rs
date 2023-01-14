@@ -1,3 +1,5 @@
+//! Contains a version-agnostic wrapper structure around the version-specific database structure.
+
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -5,13 +7,16 @@ use serde::{Deserialize, Serialize};
 use super::{Database, DatabaseImpl};
 use crate::errors::DatabaseReadError;
 
+/// A version-agnostic container for a database structure.
 #[derive(Serialize, Deserialize)]
 pub struct DatabaseFile {
+    /// The expected database version.
     pub version: u8,
     data: serde_json::Value,
 }
 
 impl DatabaseFile {
+    /// Read the database file from disk in json format.
     pub fn read(path: &Path) -> Result<Self, DatabaseReadError> {
         let file = std::fs::read(path)?;
 
@@ -20,6 +25,7 @@ impl DatabaseFile {
         Ok(db_info)
     }
 
+    /// Write the database file to disk in json format.
     pub fn write(&self, path: &Path) -> Result<(), DatabaseReadError> {
         let json = serde_json::to_vec_pretty(self)?;
         std::fs::write(path, json)?;

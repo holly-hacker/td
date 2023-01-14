@@ -23,6 +23,7 @@ pub struct Database {
     pub(crate) task_id_to_index: HashMap<TaskId, NodeIndex>,
 }
 
+/// A completable task.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     /// A unique id for this task
@@ -42,9 +43,11 @@ pub struct Task {
     pub tags: Vec<String>,
 }
 
+/// A marker type to indicate that the relation between 2 tasks is a dependency.
 #[derive(Debug, Clone, Default)]
 pub struct TaskDependency;
 
+/// A task ID.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TaskId(String);
 

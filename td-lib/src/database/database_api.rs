@@ -30,22 +30,26 @@ impl IndexMut<&TaskId> for Database {
 }
 
 impl Database {
+    /// Adds a new task to the database.
     pub fn add_task(&mut self, task: Task) {
         let id = task.id.clone();
         let index = self.graph.add_node(task);
         self.task_id_to_index.insert(id, index);
     }
 
+    /// Removes a task from the database. If the given task id was not found, no changes are made.
     pub fn remove_task(&mut self, task_id: &TaskId) {
         self.task_id_to_index.remove(task_id);
         let Some(task_index) = self.get_node_index(task_id) else {return;};
         self.graph.remove_node(task_index);
     }
 
+    /// Get all tasks in the database.
     pub fn get_all_tasks(&self) -> impl Iterator<Item = &Task> + '_ {
         self.graph.node_weights()
     }
 
+    /// Add a task dependency between 2 tasks. This indicates that one task depends on another.
     pub fn add_dependency(&mut self, from: &TaskId, to: &TaskId) {
         let from_index = self
             .get_node_index(from)
@@ -57,7 +61,7 @@ impl Database {
         self.graph.add_edge(from_index, to_index, TaskDependency);
     }
 
-    /// Gets all the tasks the given task depends on
+    /// Gets all the tasks the given task depends on.
     pub fn get_dependencies(&self, source: &TaskId) -> impl Iterator<Item = &Task> + '_ {
         let source_index = self
             .get_node_index(source)
@@ -69,7 +73,7 @@ impl Database {
             .map(|target| &self.graph[target])
     }
 
-    /// Gets all the tasks depend on the given task
+    /// Gets all the tasks that depend on the given task.
     pub fn get_inverse_dependencies(&self, target: &TaskId) -> impl Iterator<Item = &Task> + '_ {
         let target_index = self
             .get_node_index(target)
@@ -81,8 +85,7 @@ impl Database {
             .map(|source| &self.graph[source])
     }
 
-    // TODO: make this private
-    pub fn get_node_index(&self, task_id: &TaskId) -> Option<NodeIndex> {
+    fn get_node_index(&self, task_id: &TaskId) -> Option<NodeIndex> {
         self.task_id_to_index.get(task_id).cloned().or_else(|| {
             // this fallback check exists in case we add a new node and it isn't in the cache.
             // this check should be removed when insertion of new tasks is managed here.
@@ -98,6 +101,7 @@ impl Database {
 }
 
 impl Task {
+    /// Create a new, empty task with the given title.
     pub fn create_now(title: String) -> Self {
         let time_created =
             OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
@@ -111,6 +115,7 @@ impl Task {
         }
     }
 
+    /// Gets the internal ID of this task.
     pub fn id(&self) -> &TaskId {
         &self.id
     }
