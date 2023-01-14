@@ -2,8 +2,8 @@ use std::io::Stdout;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
-    database::{Task, TaskDependency},
-    petgraph::{graph::NodeIndex, visit::EdgeRef},
+    database::{Task, TaskDependency, TaskId},
+    petgraph::visit::EdgeRef,
     time::OffsetDateTime,
 };
 use tui::{
@@ -35,7 +35,7 @@ pub struct BasicTaskList {
     create_task_modal: TextInputModal,
     new_tag_modal: TextInputModal,
     rename_task_modal: TextInputModal,
-    search_box_depend_on: ListSearchModal<NodeIndex>,
+    search_box_depend_on: ListSearchModal<TaskId>,
     newest_first: bool,
 }
 
@@ -55,25 +55,15 @@ impl BasicTaskList {
         }
     }
 
-    fn get_sorted_task_list(&self, state: &AppState) -> Vec<(NodeIndex, Task)> {
+    fn get_sorted_task_list(&self, state: &AppState) -> Vec<Task> {
         let mut tasks = state
             .database
             .tasks
-            .node_indices()
-            .map(|i| {
-                (
-                    i,
-                    state
-                        .database
-                        .tasks
-                        .node_weight(i)
-                        .cloned()
-                        .expect("should find weight for NodeIndex"),
-                )
-            })
+            .node_weights()
+            .cloned()
             .collect::<Vec<_>>();
 
-        tasks.sort_by(|a, b| a.1.time_created.cmp(&b.1.time_created));
+        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
         if self.newest_first {
             tasks.reverse();
         }
@@ -81,13 +71,15 @@ impl BasicTaskList {
         tasks
     }
 
-    fn task_to_span(&self, state: &AppState, task_index: &NodeIndex, task: &Task) -> Spans {
+    fn task_to_span(&self, state: &AppState, task: &Task) -> Spans {
         let mut spans = vec![];
+
+        let task_index = state.database.get_node_index(&task.id).unwrap();
 
         let dependents_count = state
             .database
             .tasks
-            .edges_directed(*task_index, td_lib::petgraph::Direction::Incoming)
+            .edges_directed(task_index, td_lib::petgraph::Direction::Incoming)
             .count();
         if dependents_count > 0 {
             spans.push(Span::styled(
@@ -99,7 +91,7 @@ impl BasicTaskList {
         let unfullfilled_dependency_count = state
             .database
             .tasks
-            .edges_directed(*task_index, td_lib::petgraph::Direction::Outgoing)
+            .edges_directed(task_index, td_lib::petgraph::Direction::Outgoing)
             .filter(|e| {
                 let node_ref = state.database.tasks.edge_endpoints(e.id()).unwrap().1;
                 let node = state.database.tasks.node_weight(node_ref).unwrap();
@@ -141,8 +133,7 @@ impl Component for BasicTaskList {
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
         // store currently selected task in frame storage
         let task_list = self.get_sorted_task_list(global_state);
-        let selected_task_id = task_list.get(self.index).map(|x| x.0);
-        frame_storage.selected_task_index = selected_task_id;
+        frame_storage.selected_task_id = task_list.get(self.index).map(|x| x.id.clone());
 
         self.create_task_modal
             .pre_render(global_state, frame_storage);
@@ -156,33 +147,33 @@ impl Component for BasicTaskList {
         frame_storage.add_keybind(
             KEYBIND_TASK_MARK_STARTED.to_string(),
             "Mark as started",
-            selected_task_id.is_some(),
+            frame_storage.selected_task_id.is_some(),
         );
         frame_storage.add_keybind(
             KEYBIND_TASK_MARK_DONE.to_string(),
             "Mark as done",
-            selected_task_id.is_some(),
+            frame_storage.selected_task_id.is_some(),
         );
         frame_storage.add_keybind(KEYBIND_TASK_NEW.to_string(), "New task", true);
         frame_storage.add_keybind(
             KEYBIND_TASK_DELETE.to_string(),
             "Delete task",
-            selected_task_id.is_some(),
+            frame_storage.selected_task_id.is_some(),
         );
         frame_storage.add_keybind(
             KEYBIND_TASK_ADD_TAG.to_string(),
             "Add tag",
-            selected_task_id.is_some(),
+            frame_storage.selected_task_id.is_some(),
         );
         frame_storage.add_keybind(
             KEYBIND_TASK_ADD_DEPENDENCY.to_string(),
             "Add dependency",
-            selected_task_id.is_some(),
+            frame_storage.selected_task_id.is_some(),
         );
         frame_storage.add_keybind(
             KEYBIND_TASK_RENAME.to_string(),
             "Rename",
-            selected_task_id.is_some(),
+            frame_storage.selected_task_id.is_some(),
         );
     }
 
@@ -216,7 +207,7 @@ impl Component for BasicTaskList {
 
         let list_items = task_list
             .iter()
-            .map(|t| ListItem::new(self.task_to_span(state, &t.0, &t.1)))
+            .map(|t| ListItem::new(self.task_to_span(state, t)))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
             .block(block)
@@ -282,8 +273,7 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.rename_task_modal.close() {
-                    let selected_task_id = tasks[self.index].0;
-                    let selected_task = &mut state.database.tasks[selected_task_id];
+                    let selected_task = &mut state.database[&tasks[self.index].id];
                     selected_task.title = text;
 
                     state.mark_database_dirty();
@@ -296,8 +286,7 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.new_tag_modal.close() {
-                    let selected_task_id = tasks[self.index].0;
-                    let selected_task = &mut state.database.tasks[selected_task_id];
+                    let selected_task = &mut state.database[&tasks[self.index].id];
                     selected_task.tags.push(text);
 
                     state.mark_database_dirty();
@@ -309,13 +298,20 @@ impl Component for BasicTaskList {
         } else if self.search_box_depend_on.is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(selected_node) = self.search_box_depend_on.close() {
-                    let current_node = tasks[self.index].0;
-
-                    state
+                if let Some(selected_task_id) = self.search_box_depend_on.close() {
+                    let current_node_index = state
                         .database
-                        .tasks
-                        .add_edge(current_node, selected_node, TaskDependency);
+                        .get_node_index(&tasks[self.index].id)
+                        .unwrap();
+
+                    let selected_node_index =
+                        state.database.get_node_index(&selected_task_id).unwrap();
+
+                    state.database.tasks.add_edge(
+                        current_node_index,
+                        selected_node_index,
+                        TaskDependency,
+                    );
 
                     state.mark_database_dirty();
                 }
@@ -328,7 +324,7 @@ impl Component for BasicTaskList {
             // take our own input
             match (key.code, key.modifiers) {
                 (KeyCode::Char(KEYBIND_TASK_MARK_STARTED), KeyModifiers::NONE) => {
-                    let task = &mut state.database.tasks[tasks[self.index].0];
+                    let task = &mut state.database[&tasks[self.index].id];
                     if task.time_started.is_none() {
                         task.time_started = Some(
                             OffsetDateTime::now_local()
@@ -343,7 +339,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_MARK_DONE), KeyModifiers::NONE) => {
-                    let task = &mut state.database.tasks[tasks[self.index].0];
+                    let task = &mut state.database[&tasks[self.index].id];
                     if task.time_completed.is_none() {
                         task.time_completed = Some(
                             OffsetDateTime::now_local()
@@ -363,13 +359,18 @@ impl Component for BasicTaskList {
                 }
                 (KeyCode::Char(KEYBIND_TASK_RENAME), KeyModifiers::NONE) => {
                     self.rename_task_modal
-                        .open_with_text(tasks[self.index].1.title.clone());
+                        .open_with_text(tasks[self.index].title.clone());
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // delete
-                        state.database.tasks.remove_node(tasks[self.index].0);
+                        state.database.tasks.remove_node(
+                            state
+                                .database
+                                .get_node_index(&tasks[self.index].id)
+                                .unwrap(),
+                        );
 
                         state.mark_database_dirty();
                     }
@@ -389,11 +390,14 @@ impl Component for BasicTaskList {
                     let selected = &tasks[self.index];
                     let tasks = tasks
                         .iter()
-                        .filter(|t| t.0 != selected.0)
+                        .filter(|t| t.id != selected.id)
                         .filter(|candidate| {
-                            !state.database.tasks.contains_edge(selected.0, candidate.0)
+                            !state.database.tasks.contains_edge(
+                                state.database.get_node_index(&selected.id).unwrap(),
+                                state.database.get_node_index(&candidate.id).unwrap(),
+                            )
                         })
-                        .map(|w| (w.0, w.1.title.clone()))
+                        .map(|w| (w.id.clone(), w.title.clone()))
                         .collect();
                     self.search_box_depend_on.open(tasks);
                     true

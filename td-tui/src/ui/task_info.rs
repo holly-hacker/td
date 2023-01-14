@@ -62,10 +62,12 @@ impl Component for TaskInfoDisplay {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
-        let Some(node_index) = frame_storage.selected_task_index else {
+        let Some(task_id) = frame_storage.selected_task_id.clone() else {
             frame.render_widget(Paragraph::new("No task selected").block(block), area);
             return;
         };
+
+        let node_index = state.database.get_node_index(&task_id).unwrap();
 
         let Some(task) = state.database.tasks.node_weight(node_index) else {
             frame.render_widget(Paragraph::new("Error: Task not found").block(block), area);

@@ -2,9 +2,8 @@ use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
-    database::{database_file::DatabaseFile, Database},
+    database::{database_file::DatabaseFile, Database, TaskId},
     errors::DatabaseReadError,
-    petgraph::stable_graph::NodeIndex,
 };
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 
@@ -88,7 +87,7 @@ pub struct FrameLocalStorage {
     keybinds_locked: bool,
 
     /// The currently selected/focused task
-    selected_task_index: Option<NodeIndex>,
+    selected_task_id: Option<TaskId>,
 }
 
 impl FrameLocalStorage {
