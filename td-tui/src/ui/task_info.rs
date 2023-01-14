@@ -1,8 +1,4 @@
-use td_lib::{
-    database::Task,
-    petgraph::{stable_graph::NodeIndex, visit::EdgeRef},
-    time::{format_description, UtcOffset},
-};
+use td_lib::time::{format_description, UtcOffset};
 use tui::{
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -14,38 +10,6 @@ use crate::ui::{
 };
 
 pub struct TaskInfoDisplay;
-
-impl TaskInfoDisplay {
-    fn get_dependencies(node_index: NodeIndex, state: &AppState) -> Vec<&Task> {
-        state
-            .database
-            .tasks
-            .edges_directed(node_index, td_lib::petgraph::Direction::Outgoing)
-            .map(|e| {
-                state
-                    .database
-                    .tasks
-                    .node_weight(e.target())
-                    .expect("get node weight")
-            })
-            .collect()
-    }
-
-    fn get_dependents(node_index: NodeIndex, state: &AppState) -> Vec<&Task> {
-        state
-            .database
-            .tasks
-            .edges_directed(node_index, td_lib::petgraph::Direction::Incoming)
-            .map(|e| {
-                state
-                    .database
-                    .tasks
-                    .node_weight(e.source())
-                    .expect("get node weight")
-            })
-            .collect::<Vec<_>>()
-    }
-}
 
 impl Component for TaskInfoDisplay {
     fn pre_render(&self, _global_state: &AppState, _frame_storage: &mut FrameLocalStorage) {}
@@ -120,14 +84,14 @@ impl Component for TaskInfoDisplay {
         }
 
         // add dependencies
-        let dependencies = Self::get_dependencies(node_index, state);
-        if !dependencies.is_empty() {
+        let mut dependencies = state.database.get_dependencies(&task_id).peekable();
+        if dependencies.peek().is_some() {
             spans.extend([
                 Spans::default(),
                 Spans::from(Span::styled("Depends on:", BOLD)),
             ]);
 
-            spans.extend(dependencies.iter().map(|task| {
+            spans.extend(dependencies.map(|task| {
                 Spans::from(vec![
                     Span::raw("- "),
                     if task.time_completed.is_some() {
@@ -139,15 +103,15 @@ impl Component for TaskInfoDisplay {
             }));
         }
 
-        // add dependents
-        let dependents = Self::get_dependents(node_index, state);
-        if !dependents.is_empty() {
+        // add inverse dependencies
+        let mut dependents = state.database.get_inverse_dependencies(&task_id).peekable();
+        if dependents.peek().is_some() {
             spans.extend([
                 Spans::default(),
                 Spans::from(Span::styled("Depended on by:", BOLD)),
             ]);
 
-            spans.extend(dependents.iter().map(|task| {
+            spans.extend(dependents.map(|task| {
                 Spans::from(vec![
                     Span::raw("- "),
                     if task.time_completed.is_some() {

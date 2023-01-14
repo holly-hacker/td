@@ -1,9 +1,8 @@
-use std::io::Stdout;
+use std::{collections::HashSet, io::Stdout};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
-    database::{Task, TaskDependency, TaskId},
-    petgraph::visit::EdgeRef,
+    database::{Task, TaskId},
     time::OffsetDateTime,
 };
 use tui::{
@@ -74,13 +73,7 @@ impl BasicTaskList {
     fn task_to_span(&self, state: &AppState, task: &Task) -> Spans {
         let mut spans = vec![];
 
-        let task_index = state.database.get_node_index(&task.id).unwrap();
-
-        let dependents_count = state
-            .database
-            .tasks
-            .edges_directed(task_index, td_lib::petgraph::Direction::Incoming)
-            .count();
+        let dependents_count = state.database.get_inverse_dependencies(&task.id).count();
         if dependents_count > 0 {
             spans.push(Span::styled(
                 format!("{:>2}⤣", dependents_count.to_string()),
@@ -90,14 +83,10 @@ impl BasicTaskList {
 
         let unfullfilled_dependency_count = state
             .database
-            .tasks
-            .edges_directed(task_index, td_lib::petgraph::Direction::Outgoing)
-            .filter(|e| {
-                let node_ref = state.database.tasks.edge_endpoints(e.id()).unwrap().1;
-                let node = state.database.tasks.node_weight(node_ref).unwrap();
-                node.time_completed.is_none()
-            })
+            .get_dependencies(&task.id)
+            .filter(|t| t.time_completed.is_none())
             .count();
+
         if unfullfilled_dependency_count > 0 {
             spans.push(Span::styled(
                 format!("{:>2}⤥", unfullfilled_dependency_count.to_string()),
@@ -299,19 +288,9 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(selected_task_id) = self.search_box_depend_on.close() {
-                    let current_node_index = state
+                    state
                         .database
-                        .get_node_index(&tasks[self.index].id)
-                        .unwrap();
-
-                    let selected_node_index =
-                        state.database.get_node_index(&selected_task_id).unwrap();
-
-                    state.database.tasks.add_edge(
-                        current_node_index,
-                        selected_node_index,
-                        TaskDependency,
-                    );
+                        .add_dependency(&tasks[self.index].id, &selected_task_id);
 
                     state.mark_database_dirty();
                 }
@@ -388,18 +367,18 @@ impl Component for BasicTaskList {
                 (KeyCode::Char(KEYBIND_TASK_ADD_DEPENDENCY), KeyModifiers::NONE) => {
                     // link to other task
                     let selected = &tasks[self.index];
-                    let tasks = tasks
+                    let existing_dependency_ids = state
+                        .database
+                        .get_dependencies(&selected.id)
+                        .map(|x| x.id.clone())
+                        .collect::<HashSet<_>>();
+                    let candidate_tasks = tasks
                         .iter()
                         .filter(|t| t.id != selected.id)
-                        .filter(|candidate| {
-                            !state.database.tasks.contains_edge(
-                                state.database.get_node_index(&selected.id).unwrap(),
-                                state.database.get_node_index(&candidate.id).unwrap(),
-                            )
-                        })
+                        .filter(|candidate| !existing_dependency_ids.contains(&candidate.id))
                         .map(|w| (w.id.clone(), w.title.clone()))
                         .collect();
-                    self.search_box_depend_on.open(tasks);
+                    self.search_box_depend_on.open(candidate_tasks);
                     true
                 }
                 (KeyCode::Up, KeyModifiers::NONE) => {

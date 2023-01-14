@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-use petgraph::stable_graph::NodeIndex;
+use petgraph::{stable_graph::NodeIndex, visit::EdgeRef, Direction};
 use time::OffsetDateTime;
 
 use super::*;
@@ -30,6 +30,41 @@ impl IndexMut<&TaskId> for Database {
 }
 
 impl Database {
+    pub fn add_dependency(&mut self, from: &TaskId, to: &TaskId) {
+        let from_index = self
+            .get_node_index(from)
+            .expect("should be able to resolve task id");
+        let to_index = self
+            .get_node_index(to)
+            .expect("should be able to resolve task id");
+
+        self.tasks.add_edge(from_index, to_index, TaskDependency);
+    }
+
+    /// Gets all the tasks the given task depends on
+    pub fn get_dependencies(&self, source: &TaskId) -> impl Iterator<Item = &Task> + '_ {
+        let source_index = self
+            .get_node_index(source)
+            .expect("should be able to resolve task id");
+
+        self.tasks
+            .edges_directed(source_index, Direction::Outgoing)
+            .map(|edge| edge.target())
+            .map(|target| &self.tasks[target])
+    }
+
+    /// Gets all the tasks depend on the given task
+    pub fn get_inverse_dependencies(&self, target: &TaskId) -> impl Iterator<Item = &Task> + '_ {
+        let target_index = self
+            .get_node_index(target)
+            .expect("should be able to resolve task id");
+
+        self.tasks
+            .edges_directed(target_index, Direction::Incoming)
+            .map(|edge| edge.source())
+            .map(|source| &self.tasks[source])
+    }
+
     // TODO: make this private
     pub fn get_node_index(&self, task_id: &TaskId) -> Option<NodeIndex> {
         self.task_id_to_index.get(task_id).cloned().or_else(|| {
