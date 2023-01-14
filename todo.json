@@ -1,7 +1,6 @@
 {
   "version": 1,
   "data": {
-    "next_task_id": 0,
     "tasks": {
       "edge_property": "directed",
       "edges": [

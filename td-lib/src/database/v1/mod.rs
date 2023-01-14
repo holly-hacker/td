@@ -8,8 +8,6 @@ use time::OffsetDateTime;
 // I can implement that using a custom serialize/deserialize implementation
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Database {
-    next_task_id: usize,
-
     /// The list of tasks in this database.
     ///
     /// This uses an IndexMap to keep a stable order, which means insertions and removals in the
