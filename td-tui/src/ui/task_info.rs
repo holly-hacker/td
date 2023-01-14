@@ -88,11 +88,20 @@ impl Component for TaskInfoDisplay {
             ]),
         ];
 
+        if let Some(started_at) = &task.time_started {
+            let time_local =
+                started_at.to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
+            spans.push(Spans::from(vec![
+                Span::styled("Started: ", BOLD),
+                Span::raw(time_local.format(&date_format).unwrap()),
+            ]));
+        }
+
         if let Some(completed_at) = &task.time_completed {
             let time_local =
                 completed_at.to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
             spans.push(Spans::from(vec![
-                Span::styled("Completed at ", BOLD),
+                Span::styled("Completed: ", BOLD),
                 Span::raw(time_local.format(&date_format).unwrap()),
             ]));
         }

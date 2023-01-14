@@ -47,6 +47,13 @@ pub const ITALIC: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
+pub const STARTED_TASK: Style = Style {
+    fg: Some(Color::LightCyan),
+    bg: None,
+    add_modifier: Modifier::BOLD,
+    sub_modifier: Modifier::empty(),
+};
+
 pub const COMPLETED_TASK: Style = Style {
     fg: Some(Color::DarkGray),
     bg: None,

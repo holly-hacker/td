@@ -287,6 +287,11 @@
           ],
           "time_created": "2023-01-14 11:28:42.2167957 +01:00:00",
           "title": "Allow filtering using custom search queries (custom syntax)"
+        },
+        {
+          "time_completed": "2023-01-14 12:23:08.9607203 +01:00:00",
+          "time_created": "2023-01-14 12:23:07.7447062 +01:00:00",
+          "title": "Allow tracking started tasks"
         }
       ]
     }

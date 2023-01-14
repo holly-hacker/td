@@ -23,6 +23,9 @@ pub struct Task {
     pub title: String,
     /// When the task has been created.
     pub time_created: OffsetDateTime,
+    /// If the task has been started, this is when that happened.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time_started: Option<OffsetDateTime>,
     /// If the task has been completed, this is when that happened.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub time_completed: Option<OffsetDateTime>,
@@ -38,6 +41,7 @@ impl Task {
         Self {
             title,
             time_created,
+            time_started: None,
             time_completed: None,
             tags: vec![],
         }

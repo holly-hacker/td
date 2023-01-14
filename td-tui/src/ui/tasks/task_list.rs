@@ -17,12 +17,12 @@ use tui::{
 use crate::{
     keybinds::{
         KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE,
-        KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_NEW, KEYBIND_TASK_RENAME,
+        KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_MARK_STARTED, KEYBIND_TASK_NEW, KEYBIND_TASK_RENAME,
     },
     ui::{
         constants::{
             BOLD, COMPLETED_TASK, FG_DIM, FG_GREEN, FG_RED, FG_WHITE, ITALIC, LIST_HIGHLIGHT_STYLE,
-            LIST_STYLE,
+            LIST_STYLE, STARTED_TASK,
         },
         modal::{list_search::ListSearchModal, text_input::TextInputModal},
         task_info::TaskInfoDisplay,
@@ -120,15 +120,17 @@ impl BasicTaskList {
         // add title
         let text_style = if task.time_completed.is_some() {
             LIST_STYLE.patch(COMPLETED_TASK)
+        } else if task.time_started.is_some() {
+            LIST_STYLE.patch(STARTED_TASK)
         } else {
             LIST_STYLE
         };
         spans.push(Span::styled(task.title.clone(), text_style));
 
         // add tags
-        for task in &task.tags {
+        for tag in &task.tags {
             spans.push(Span::raw(" "));
-            spans.push(Span::styled(task.clone(), FG_DIM.patch(ITALIC)));
+            spans.push(Span::styled(tag.clone(), FG_DIM.patch(ITALIC)));
         }
 
         spans.into()
@@ -151,6 +153,11 @@ impl Component for BasicTaskList {
             .pre_render(global_state, frame_storage);
 
         frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
+        frame_storage.add_keybind(
+            KEYBIND_TASK_MARK_STARTED.to_string(),
+            "Mark as started",
+            selected_task_id.is_some(),
+        );
         frame_storage.add_keybind(
             KEYBIND_TASK_MARK_DONE.to_string(),
             "Mark as done",
@@ -329,6 +336,23 @@ impl Component for BasicTaskList {
         } else {
             // take our own input
             match (key.code, key.modifiers) {
+                (KeyCode::Char(KEYBIND_TASK_MARK_STARTED), KeyModifiers::NONE) => {
+                    let task = &mut state.database.tasks[tasks[self.index].0];
+                    if task.time_started.is_none() {
+                        task.time_started = Some(
+                            OffsetDateTime::now_local()
+                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                        );
+                    } else {
+                        task.time_started = None;
+                    }
+
+                    // TODO: error handling. show popup on failure to save?
+                    let db_info: DatabaseInfo = (&state.database).into();
+                    db_info.write(&state.path).unwrap();
+
+                    true
+                }
                 (KeyCode::Char(KEYBIND_TASK_MARK_DONE), KeyModifiers::NONE) => {
                     let task = &mut state.database.tasks[tasks[self.index].0];
                     if task.time_completed.is_none() {

@@ -1,3 +1,4 @@
+pub const KEYBIND_TASK_MARK_STARTED: char = 's';
 pub const KEYBIND_TASK_MARK_DONE: char = ' ';
 pub const KEYBIND_TASK_NEW: char = 'n';
 pub const KEYBIND_TASK_DELETE: char = 'x';
