@@ -31,12 +31,7 @@ impl Component for TaskInfoDisplay {
             return;
         };
 
-        let node_index = state.database.get_node_index(&task_id).unwrap();
-
-        let Some(task) = state.database.tasks.node_weight(node_index) else {
-            frame.render_widget(Paragraph::new("Error: Task not found").block(block), area);
-            return;
-        };
+        let task = &state.database[&task_id];
 
         let date_format =
             format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]")

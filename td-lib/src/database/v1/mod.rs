@@ -17,8 +17,9 @@ pub struct Database {
     ///
     /// This uses a StableDiGraph to keep a stable order, which means insertions and removals will
     /// not cause large changes to the database file.
-    pub tasks: StableDiGraph<Task, TaskDependency>,
+    pub(crate) tasks: StableDiGraph<Task, TaskDependency>,
 
+    /// A lookup cache
     pub(crate) task_id_to_index: HashMap<TaskId, NodeIndex>,
 }
 
