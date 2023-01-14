@@ -48,7 +48,7 @@ pub const ITALIC: Style = Style {
 };
 
 pub const STARTED_TASK: Style = Style {
-    fg: Some(Color::LightCyan),
+    fg: Some(Color::Yellow),
     bg: None,
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
