@@ -312,11 +312,10 @@ impl Component for BasicTaskList {
                 if let Some(selected_node) = self.search_box_depend_on.close() {
                     let current_node = tasks[self.index].0;
 
-                    state.database.tasks.add_edge(
-                        current_node,
-                        selected_node,
-                        TaskDependency::new(),
-                    );
+                    state
+                        .database
+                        .tasks
+                        .add_edge(current_node, selected_node, TaskDependency);
 
                     state.mark_database_dirty();
                 }

@@ -96,7 +96,7 @@ impl From<DatabaseDiskModel> for Database {
                 let source_index = id_index_map.iter().find(|x| x.0 == source_id).unwrap().1;
                 let target_index = id_index_map.iter().find(|x| x.0 == target_id).unwrap().1;
 
-                graph.add_edge(source_index, target_index, TaskDependency::new());
+                graph.add_edge(source_index, target_index, TaskDependency);
             }
         }
 
@@ -156,14 +156,8 @@ impl Task {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct TaskDependency {}
-
-impl TaskDependency {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
+#[derive(Debug, Clone, Default)]
+pub struct TaskDependency;
 
 impl super::DatabaseImpl for Database {
     const VERSION: u8 = 1;
