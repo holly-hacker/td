@@ -70,6 +70,13 @@ impl AppState {
 
         Ok(())
     }
+
+    pub fn mark_database_dirty(&self) {
+        // TODO: error handling. show popup on failure to save?
+        // TODO: don't immediately save, store dirty flag instead.
+        let db_info: DatabaseInfo = (&self.database).into();
+        db_info.write(&self.path).unwrap();
+    }
 }
 
 /// Global storage for the current frame. Can be populated during [Component::pre_render] and read

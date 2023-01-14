@@ -2,7 +2,7 @@ use std::io::Stdout;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
-    database::{DatabaseInfo, Task, TaskDependency},
+    database::{Task, TaskDependency},
     petgraph::{graph::NodeIndex, visit::EdgeRef},
     time::OffsetDateTime,
 };
@@ -272,9 +272,7 @@ impl Component for BasicTaskList {
                 if let Some(text) = self.create_task_modal.close() {
                     state.database.tasks.add_node(Task::create_now(text));
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                    state.mark_database_dirty();
                 }
                 true
             } else {
@@ -288,9 +286,7 @@ impl Component for BasicTaskList {
                     let selected_task = &mut state.database.tasks[selected_task_id];
                     selected_task.title = text;
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                    state.mark_database_dirty();
                 }
                 true
             } else {
@@ -304,9 +300,7 @@ impl Component for BasicTaskList {
                     let selected_task = &mut state.database.tasks[selected_task_id];
                     selected_task.tags.push(text);
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                    state.mark_database_dirty();
                 }
                 true
             } else {
@@ -324,9 +318,7 @@ impl Component for BasicTaskList {
                         TaskDependency::new(),
                     );
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                    state.mark_database_dirty();
                 }
 
                 true
@@ -347,9 +339,7 @@ impl Component for BasicTaskList {
                         task.time_started = None;
                     }
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                    state.mark_database_dirty();
 
                     true
                 }
@@ -364,9 +354,7 @@ impl Component for BasicTaskList {
                         task.time_completed = None;
                     }
 
-                    // TODO: error handling. show popup on failure to save?
-                    let db_info: DatabaseInfo = (&state.database).into();
-                    db_info.write(&state.path).unwrap();
+                    state.mark_database_dirty();
 
                     true
                 }
@@ -384,9 +372,7 @@ impl Component for BasicTaskList {
                         // delete
                         state.database.tasks.remove_node(tasks[self.index].0);
 
-                        // TODO: error handling. show popup on failure to save?
-                        let db_info: DatabaseInfo = (&state.database).into();
-                        db_info.write(&state.path).unwrap();
+                        state.mark_database_dirty();
                     }
 
                     true
