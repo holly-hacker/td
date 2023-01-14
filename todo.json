@@ -277,6 +277,7 @@
           "title": "Allow entering newlines in multi-line textbox"
         },
         {
+          "time_completed": "2023-01-14 11:55:31.3967567 +01:00:00",
           "time_created": "2023-01-14 11:27:25.4810338 +01:00:00",
           "title": "Don't show completed tasks in dependency icon in task list"
         },

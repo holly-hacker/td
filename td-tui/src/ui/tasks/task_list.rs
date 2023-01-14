@@ -3,7 +3,7 @@ use std::io::Stdout;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
     database::{DatabaseInfo, Task, TaskDependency},
-    petgraph::graph::NodeIndex,
+    petgraph::{graph::NodeIndex, visit::EdgeRef},
     time::OffsetDateTime,
 };
 use tui::{
@@ -96,19 +96,24 @@ impl BasicTaskList {
             ));
         }
 
-        let dependency_count = state
+        let unfullfilled_dependency_count = state
             .database
             .tasks
             .edges_directed(*task_index, td_lib::petgraph::Direction::Outgoing)
+            .filter(|e| {
+                let node_ref = state.database.tasks.edge_endpoints(e.id()).unwrap().1;
+                let node = state.database.tasks.node_weight(node_ref).unwrap();
+                node.time_completed.is_none()
+            })
             .count();
-        if dependency_count > 0 {
+        if unfullfilled_dependency_count > 0 {
             spans.push(Span::styled(
-                format!("{:>2}⤥", dependency_count.to_string()),
+                format!("{:>2}⤥", unfullfilled_dependency_count.to_string()),
                 FG_RED.patch(BOLD),
             ));
         }
 
-        if dependency_count > 0 || dependents_count > 0 {
+        if unfullfilled_dependency_count > 0 || dependents_count > 0 {
             spans.push(Span::raw(" "));
         }
 
