@@ -55,12 +55,7 @@ impl BasicTaskList {
     }
 
     fn get_sorted_task_list(&self, state: &AppState) -> Vec<Task> {
-        let mut tasks = state
-            .database
-            .tasks
-            .node_weights()
-            .cloned()
-            .collect::<Vec<_>>();
+        let mut tasks = state.database.get_all_tasks().cloned().collect::<Vec<_>>();
 
         tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
         if self.newest_first {
@@ -250,8 +245,7 @@ impl Component for BasicTaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.create_task_modal.close() {
-                    state.database.tasks.add_node(Task::create_now(text));
-
+                    state.database.add_task(Task::create_now(text));
                     state.mark_database_dirty();
                 }
                 true
@@ -344,13 +338,7 @@ impl Component for BasicTaskList {
                 (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // delete
-                        state.database.tasks.remove_node(
-                            state
-                                .database
-                                .get_node_index(&tasks[self.index].id)
-                                .unwrap(),
-                        );
-
+                        state.database.remove_task(&tasks[self.index].id);
                         state.mark_database_dirty();
                     }
 

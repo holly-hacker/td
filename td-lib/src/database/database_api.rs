@@ -30,6 +30,22 @@ impl IndexMut<&TaskId> for Database {
 }
 
 impl Database {
+    pub fn add_task(&mut self, task: Task) {
+        let id = task.id.clone();
+        let index = self.tasks.add_node(task);
+        self.task_id_to_index.insert(id, index);
+    }
+
+    pub fn remove_task(&mut self, task_id: &TaskId) {
+        self.task_id_to_index.remove(task_id);
+        let Some(task_index) = self.get_node_index(task_id) else {return;};
+        self.tasks.remove_node(task_index);
+    }
+
+    pub fn get_all_tasks(&self) -> impl Iterator<Item = &Task> + '_ {
+        self.tasks.node_weights()
+    }
+
     pub fn add_dependency(&mut self, from: &TaskId, to: &TaskId) {
         let from_index = self
             .get_node_index(from)
