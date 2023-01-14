@@ -9,13 +9,13 @@ use tui::{
 };
 
 use crate::{
-    ui::{constants::MIN_MODAL_WIDTH, input::TextBoxComponent, AppState, Component},
+    ui::{constants::MIN_MODAL_WIDTH, input::MultilineTextBoxComponent, AppState, Component},
     utils::RectExt,
 };
 
 pub struct TextInputModal {
     title: String,
-    input: Option<TextBoxComponent>,
+    input: Option<MultilineTextBoxComponent>,
 }
 
 impl TextInputModal {
@@ -28,11 +28,15 @@ impl TextInputModal {
     }
 
     pub fn open(&mut self) {
-        self.input = Some(TextBoxComponent::new_focused());
+        self.input = Some(MultilineTextBoxComponent::new_focused().with_background(false));
     }
 
     pub fn open_with_text(&mut self, input: String) {
-        self.input = Some(TextBoxComponent::new_focused().with_text(input));
+        self.input = Some(
+            MultilineTextBoxComponent::new_focused()
+                .with_background(false)
+                .with_text(input),
+        );
     }
     pub fn close(&mut self) -> Option<String> {
         self.input.take().map(|input| input.text().to_string())
@@ -69,11 +73,11 @@ impl Component for TextInputModal {
             .borders(Borders::ALL);
 
         // put the block in the center of the area
-        let block_width = MIN_MODAL_WIDTH
-            .max(textbox.text().len() as u16 + 1)
-            .max(self.title.len() as u16)
-            + 2;
-        let block_area = area.center_rect(block_width, TextBoxComponent::HEIGHT + 2);
+        let block_width = MIN_MODAL_WIDTH.clamp(self.title.len() as u16, 32);
+        let block_area = area.center_rect(
+            block_width + 2,
+            textbox.text_wrapped(block_width).len() as u16 + 2,
+        );
         let block_area_inner = block.inner(block_area);
 
         frame.render_widget(Clear, block_area);

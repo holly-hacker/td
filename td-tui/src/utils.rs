@@ -1,7 +1,9 @@
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::{
     layout::Rect,
     text::{Span, Spans},
 };
+use tui_input::InputRequest;
 
 pub trait RectExt {
     /// Creates a new rect with the given width, starting at the same origin.
@@ -84,6 +86,26 @@ pub fn wrap_spans<'span>(
     }
 
     ret
+}
+
+pub fn process_textbox_input(key: &KeyEvent) -> Option<InputRequest> {
+    let ctrl_held = key.modifiers.contains(KeyModifiers::CONTROL);
+    match key.code {
+        KeyCode::Backspace if ctrl_held => Some(InputRequest::DeletePrevWord),
+        KeyCode::Delete if ctrl_held => Some(InputRequest::DeleteNextWord),
+        KeyCode::Backspace => Some(InputRequest::DeletePrevChar),
+        KeyCode::Delete => Some(InputRequest::DeleteNextChar),
+
+        KeyCode::Left if ctrl_held => Some(InputRequest::GoToPrevWord),
+        KeyCode::Right if ctrl_held => Some(InputRequest::GoToNextWord),
+        KeyCode::Left => Some(InputRequest::GoToPrevChar),
+        KeyCode::Right => Some(InputRequest::GoToNextChar),
+        KeyCode::Home => Some(InputRequest::GoToStart),
+        KeyCode::End => Some(InputRequest::GoToEnd),
+
+        KeyCode::Char(c) => Some(InputRequest::InsertChar(c)),
+        _ => None,
+    }
 }
 
 #[cfg(test)]

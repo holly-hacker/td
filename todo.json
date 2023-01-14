@@ -104,6 +104,11 @@
           18,
           24,
           {}
+        ],
+        [
+          26,
+          7,
+          {}
         ]
       ],
       "node_holes": [],
@@ -160,6 +165,7 @@
           "title": "Allow quick-creating tasks with dependency/dependent task already linked"
         },
         {
+          "time_completed": "2023-01-14 11:25:06.8333038 +01:00:00",
           "time_created": "2023-01-07 22:45:48.9987077 +01:00:00",
           "title": "Add multi-line textbox component"
         },
@@ -224,7 +230,7 @@
             "milestone"
           ],
           "time_created": "2023-01-08 13:05:26.5877012 +01:00:00",
-          "title": "Milestone: v0.1"
+          "title": "Release: v0.1"
         },
         {
           "time_created": "2023-01-08 13:11:45.026854 +01:00:00",
@@ -265,6 +271,21 @@
           ],
           "time_created": "2023-01-08 14:07:09.9546943 +01:00:00",
           "title": "Allow exporting database to GraphViz file"
+        },
+        {
+          "time_created": "2023-01-14 11:25:39.3772153 +01:00:00",
+          "title": "Allow entering newlines in multi-line textbox"
+        },
+        {
+          "time_created": "2023-01-14 11:27:25.4810338 +01:00:00",
+          "title": "Don't show completed tasks in dependency icon in task list"
+        },
+        {
+          "tags": [
+            "P:2"
+          ],
+          "time_created": "2023-01-14 11:28:42.2167957 +01:00:00",
+          "title": "Allow filtering using custom search queries (custom syntax)"
         }
       ]
     }

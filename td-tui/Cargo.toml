@@ -10,5 +10,6 @@ path = "src/main.rs"
 [dependencies]
 crossterm = "0.25"
 td-lib = { path = "../td-lib" }
+textwrap = { version = "0.16", default-features = false }
 tui = "0.19"
 tui-input = "0.6"
