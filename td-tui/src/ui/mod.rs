@@ -2,7 +2,7 @@ use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use td_lib::{
-    database::{Database, DatabaseInfo},
+    database::{database_file::DatabaseFile, Database},
     errors::DatabaseReadError,
     petgraph::stable_graph::NodeIndex,
 };
@@ -29,11 +29,11 @@ impl AppState {
         let db_info = if !path.exists() {
             println!("The given database file ({path:?}) does not exist, creating a new one.");
 
-            let db_info = DatabaseInfo::default();
+            let db_info = DatabaseFile::default();
             db_info.write(&path)?;
             db_info
         } else {
-            DatabaseInfo::read(&path)?
+            DatabaseFile::read(&path)?
         };
 
         let database = db_info.try_into()?;
@@ -74,7 +74,7 @@ impl AppState {
     pub fn mark_database_dirty(&self) {
         // TODO: error handling. show popup on failure to save?
         // TODO: don't immediately save, store dirty flag instead.
-        let db_info: DatabaseInfo = (&self.database).into();
+        let db_info: DatabaseFile = (&self.database).into();
         db_info.write(&self.path).unwrap();
     }
 }

@@ -174,7 +174,7 @@
         "title": "Release: v0.1",
         "time_created": "2023-01-08 13:05:26.5877012 +01:00:00",
         "tags": [
-          "milestone"
+          "release"
         ]
       },
       {
@@ -258,6 +258,25 @@
         "time_created": "2023-01-14 13:18:34.8484239 +01:00:00",
         "time_started": "2023-01-14 13:18:38.3764893 +01:00:00",
         "time_completed": "2023-01-14 14:17:12.6239111 +01:00:00"
+      },
+      {
+        "dependencies": [
+          "SkHpVbJS"
+        ],
+        "id": "hSpYZFkc",
+        "title": "Warn user before upgrading database model",
+        "time_created": "2023-01-14 14:32:24.789619 +01:00:00"
+      },
+      {
+        "dependencies": [
+          "SkHpVbJS"
+        ],
+        "id": "tFBoHBtT",
+        "title": "Release: v0.2",
+        "time_created": "2023-01-14 14:32:48.7094352 +01:00:00",
+        "tags": [
+          "release"
+        ]
       }
     ]
   }
