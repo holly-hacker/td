@@ -161,6 +161,6 @@ mod tests {
 
     #[test]
     fn test_center_rect() {
-        assert_eq!(START_RECT.center_rect(6, 4), Rect::new(102, 108, 8, 12));
+        assert_eq!(START_RECT.center_rect(6, 4), Rect::new(102, 108, 6, 4));
     }
 }
