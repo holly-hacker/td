@@ -22,7 +22,13 @@ fn main() {
     }
 
     let path = PathBuf::from(&args[0]);
-    let app = AppState::create(path).unwrap();
+    let app = match AppState::create(path) {
+        Ok(app) => app,
+        Err(e) => {
+            println!("Error while loading database: {e}");
+            return;
+        }
+    };
 
     if let Err(e) = run_app(app) {
         println!("Error while running app: {e}");
