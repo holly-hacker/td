@@ -1,6 +1,4 @@
 use crossterm::event::KeyCode;
-use predicates::BoxPredicate;
-use td_lib::database::Task;
 use tui::{
     layout::{Constraint, Direction, Layout},
     widgets::{Block, BorderType, Borders},
@@ -22,10 +20,11 @@ pub struct TaskPage {
     settings: TaskListSettings,
     selection_index: usize,
 }
+
 impl TaskPage {
-    pub(crate) fn new(filter: BoxPredicate<Task>) -> Self {
+    pub fn new() -> Self {
         Self {
-            list: TaskList::new(filter),
+            list: TaskList::new(),
             selection_index: 0,
             settings: TaskListSettings::default(),
         }

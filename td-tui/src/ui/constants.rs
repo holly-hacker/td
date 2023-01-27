@@ -5,6 +5,13 @@ pub const MIN_MODAL_WIDTH: u16 = 32;
 
 pub const ACCENT_COLOR: Color = Color::LightBlue;
 
+pub const NO_STYLE: Style = Style {
+    fg: None,
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
 pub const FG_WHITE: Style = Style {
     fg: Some(Color::White),
     bg: None,
@@ -65,6 +72,13 @@ pub const TEXT_INVERTED: Style = Style {
     fg: Some(Color::Black),
     bg: Some(Color::White),
     add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+pub const SETTINGS_HEADER: Style = Style {
+    fg: None,
+    bg: None,
+    add_modifier: Modifier::UNDERLINED,
     sub_modifier: Modifier::empty(),
 };
 

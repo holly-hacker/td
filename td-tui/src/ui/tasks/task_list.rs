@@ -1,7 +1,7 @@
 use std::{collections::HashSet, io::Stdout};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use predicates::{prelude::*, BoxPredicate};
+use predicates::prelude::*;
 use td_lib::{
     database::{Task, TaskId},
     time::OffsetDateTime,
@@ -27,13 +27,12 @@ pub struct TaskList {
     rename_task_modal: ModalKey<TextInputModal>,
     delete_task_modal: ModalKey<ConfirmationModal>,
     search_box_depend_on: ModalKey<ListSearchModal<TaskId>>,
-    filter: BoxPredicate<Task>,
 }
 
 impl TaskList {
     const SCROLL_PAGE_UP_DOWN: usize = 32;
 
-    pub fn new(filter: BoxPredicate<Task>) -> Self {
+    pub fn new() -> Self {
         let mut modal_collection = ModalCollection::default();
         Self {
             index: 0,
@@ -50,7 +49,6 @@ impl TaskList {
                 "Choose which task to depend on".to_string(),
             )),
             modal_collection,
-            filter,
         }
     }
 
@@ -64,7 +62,7 @@ impl TaskList {
         }
 
         // filter
-        tasks.retain(|x| self.filter.eval(x));
+        tasks.retain(|x| state.get_task_filter_predicate().eval(x));
 
         tasks
     }

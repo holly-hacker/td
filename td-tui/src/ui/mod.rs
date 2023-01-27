@@ -2,7 +2,10 @@ use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use downcast_rs::{impl_downcast, Downcast};
-use predicates::{prelude::predicate, PredicateBoxExt};
+use predicates::{
+    prelude::{predicate, PredicateBooleanExt},
+    BoxPredicate, PredicateBoxExt,
+};
 use td_lib::{
     database::{database_file::DatabaseFile, Database, Task, TaskId},
     errors::DatabaseReadError,
@@ -25,6 +28,7 @@ pub struct AppState {
     pub path: PathBuf,
 
     pub sort_oldest_first: bool,
+    pub filter_completed: bool,
 }
 
 impl AppState {
@@ -45,6 +49,7 @@ impl AppState {
             database,
             path,
             sort_oldest_first: false,
+            filter_completed: true,
         })
     }
 
@@ -78,11 +83,23 @@ impl AppState {
         Ok(())
     }
 
-    pub fn mark_database_dirty(&self) {
+    pub fn mark_database_dirty(&mut self) {
         // TODO: error handling. show popup on failure to save?
         // TODO: don't immediately save, store dirty flag instead.
         let db_info: DatabaseFile = (&self.database).into();
         db_info.write(&self.path).unwrap();
+    }
+
+    pub fn get_task_filter_predicate(&self) -> BoxPredicate<Task> {
+        let mut predicate = predicate::always().boxed();
+
+        if self.filter_completed {
+            predicate = predicate
+                .and(predicate::function(|x: &Task| x.time_completed.is_none()))
+                .boxed();
+        }
+
+        predicate
     }
 }
 
@@ -159,18 +176,7 @@ struct LayoutRoot {
 impl LayoutRoot {
     fn new() -> Self {
         Self {
-            tabs: TabLayout::new([
-                (
-                    "Unfinished tasks",
-                    Box::new(TaskPage::new(
-                        predicate::function(|x: &Task| x.time_completed.is_none()).boxed(),
-                    )) as Box<dyn Component>,
-                ),
-                (
-                    "All tasks",
-                    Box::new(TaskPage::new(predicate::always().boxed())) as Box<dyn Component>,
-                ),
-            ]),
+            tabs: TabLayout::new([("Tasks", Box::new(TaskPage::new()) as Box<dyn Component>)]),
         }
     }
 }
