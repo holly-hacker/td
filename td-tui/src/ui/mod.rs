@@ -9,7 +9,7 @@ use td_lib::{
 };
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 
-use self::{keybind_list::KeybindList, tab_layout::TabLayout, tasks::task_list::BasicTaskList};
+use self::{keybind_list::KeybindList, tab_layout::TabLayout, tasks::TaskPage};
 use crate::utils::{wrap_spans, RectExt};
 
 mod constants;
@@ -17,7 +17,6 @@ mod input;
 mod keybind_list;
 mod modal;
 mod tab_layout;
-mod task_info;
 mod tasks;
 
 pub struct AppState {
@@ -121,7 +120,8 @@ impl FrameLocalStorage {
 
 pub trait Component: Downcast {
     /// Executed before the render pass. Can be used to collect information that is required in the
-    /// render pass. This is guaranteed to run once before each [Component::render] call.
+    /// render pass and to register keybind hints. This is guaranteed to run once before each
+    /// [Component::render] call.
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage);
 
     /// Render the component and its children to the given area.
@@ -155,13 +155,13 @@ impl LayoutRoot {
             tabs: TabLayout::new([
                 (
                     "Unfinished tasks",
-                    Box::new(BasicTaskList::new(
+                    Box::new(TaskPage::new(
                         predicate::function(|x: &Task| x.time_completed.is_none()).boxed(),
                     )) as Box<dyn Component>,
                 ),
                 (
                     "All tasks",
-                    Box::new(BasicTaskList::new(predicate::always().boxed())) as Box<dyn Component>,
+                    Box::new(TaskPage::new(predicate::always().boxed())) as Box<dyn Component>,
                 ),
             ]),
         }

@@ -107,9 +107,7 @@
         "id": "h8TABGYW",
         "title": "Allow sorting tasks",
         "time_created": "2023-01-07 22:59:26.0616892 +01:00:00",
-        "tags": [
-          "collection"
-        ]
+        "time_started": "2023-01-27 22:15:22.9370553 +01:00:00"
       },
       {
         "id": "cb9PHuuB",
@@ -287,6 +285,19 @@
         "title": "Enforce docs on td-lib",
         "time_created": "2023-01-14 16:41:34.0422496 +01:00:00",
         "time_completed": "2023-01-14 16:41:34.9061536 +01:00:00"
+      },
+      {
+        "id": "k5oj4ZTc",
+        "title": "Don't render everything when terminal is too small",
+        "time_created": "2023-01-27 22:27:02.6813462 +01:00:00",
+        "tags": [
+          "P:2"
+        ]
+      },
+      {
+        "id": "8cFnHUHe",
+        "title": "Add descriptions to tags",
+        "time_created": "2023-01-27 22:28:29.5292424 +01:00:00"
       }
     ]
   }

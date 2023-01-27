@@ -8,29 +8,18 @@ use td_lib::{
 };
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::Rect,
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState},
+    widgets::{List, ListItem, ListState},
     Frame,
 };
 
 use crate::{
-    keybinds::{
-        KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE,
-        KEYBIND_TASK_MARK_STARTED, KEYBIND_TASK_NEW, KEYBIND_TASK_RENAME,
-    },
-    ui::{
-        constants::{
-            BOLD, COMPLETED_TASK, FG_DIM, FG_GREEN, FG_RED, FG_WHITE, ITALIC, LIST_HIGHLIGHT_STYLE,
-            LIST_STYLE, STARTED_TASK,
-        },
-        modal::{ConfirmationModal, ListSearchModal, ModalCollection, ModalKey, TextInputModal},
-        task_info::TaskInfoDisplay,
-        AppState, Component, FrameLocalStorage,
-    },
+    keybinds::*,
+    ui::{constants::*, modal::*, AppState, Component, FrameLocalStorage},
 };
 
-pub struct BasicTaskList {
+pub struct TaskList {
     index: usize,
     modal_collection: ModalCollection,
     create_task_modal: ModalKey<TextInputModal>,
@@ -41,7 +30,7 @@ pub struct BasicTaskList {
     filter: BoxPredicate<Task>,
 }
 
-impl BasicTaskList {
+impl TaskList {
     const SCROLL_PAGE_UP_DOWN: usize = 32;
 
     pub fn new(filter: BoxPredicate<Task>) -> Self {
@@ -126,7 +115,7 @@ impl BasicTaskList {
     }
 }
 
-impl Component for BasicTaskList {
+impl Component for TaskList {
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
         // store currently selected task in frame storage
         let task_list = self.get_task_list(global_state);
@@ -176,41 +165,23 @@ impl Component for BasicTaskList {
         state: &AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
     ) {
-        let layout = Layout::default()
-            .constraints([Constraint::Percentage(67), Constraint::Percentage(33)])
-            .direction(Direction::Horizontal)
-            .split(area);
-
-        let list_area = layout[0];
-        let info_area = layout[1];
-
         let task_list = self.get_task_list(state);
 
         // render the list
-        let block = Block::default()
-            .title("Tasks")
-            .borders(Borders::ALL)
-            .border_style(FG_WHITE)
-            .border_type(BorderType::Rounded);
-
         let list_items = task_list
             .iter()
             .map(|t| ListItem::new(self.task_to_span(state, t)))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
-            .block(block)
             .highlight_style(LIST_HIGHLIGHT_STYLE)
             .style(LIST_STYLE);
         let mut list_state = ListState::default();
         list_state.select((!task_list.is_empty()).then_some(self.index));
-        frame.render_stateful_widget(list, list_area, &mut list_state);
-
-        // render info
-        TaskInfoDisplay.render(frame, info_area, state, frame_storage);
+        frame.render_stateful_widget(list, area, &mut list_state);
 
         // if needed, render popups
         self.modal_collection
-            .render(frame, area, state, frame_storage);
+            .render(frame, frame.size(), state, frame_storage);
     }
 
     fn process_input(

@@ -1,7 +1,7 @@
 use td_lib::time::{format_description, UtcOffset};
 use tui::{
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::Paragraph,
 };
 
 use crate::ui::{
@@ -21,13 +21,8 @@ impl Component for TaskInfoDisplay {
         state: &AppState,
         frame_storage: &FrameLocalStorage,
     ) {
-        let block = Block::default()
-            .title("Task Info")
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-
         let Some(task_id) = frame_storage.selected_task_id.clone() else {
-            frame.render_widget(Paragraph::new("No task selected").block(block), area);
+            frame.render_widget(Paragraph::new("No task selected"), area);
             return;
         };
 
@@ -118,8 +113,7 @@ impl Component for TaskInfoDisplay {
             }));
         }
 
-        let paragraph = Paragraph::new(spans).block(block);
-        frame.render_widget(paragraph, area);
+        frame.render_widget(Paragraph::new(spans), area);
     }
 
     fn process_input(
