@@ -1,6 +1,7 @@
 use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use downcast_rs::{impl_downcast, Downcast};
 use td_lib::{
     database::{database_file::DatabaseFile, Database, TaskId},
     errors::DatabaseReadError,
@@ -117,7 +118,7 @@ impl FrameLocalStorage {
     }
 }
 
-pub trait Component {
+pub trait Component: Downcast {
     /// Executed before the render pass. Can be used to collect information that is required in the
     /// render pass. This is guaranteed to run once before each [Component::render] call.
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage);
@@ -140,6 +141,8 @@ pub trait Component {
         frame_storage: &FrameLocalStorage,
     ) -> bool;
 }
+
+impl_downcast!(Component);
 
 struct LayoutRoot {
     tabs: TabLayout,

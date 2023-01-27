@@ -55,7 +55,7 @@ impl<TKey: Eq + Clone> ListSearchModal<TKey> {
     }
 }
 
-impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
+impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
     fn pre_render(
         &self,
         global_state: &crate::ui::AppState,

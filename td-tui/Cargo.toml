@@ -9,6 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 crossterm = "0.25"
+downcast-rs = "1.2"
 td-lib = { path = "../td-lib" }
 textwrap = { version = "0.16", default-features = false }
 tui = "0.19"
