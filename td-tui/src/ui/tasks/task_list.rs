@@ -17,7 +17,7 @@ use tui::{
 use crate::{
     keybinds::{
         KEYBIND_TASK_ADD_DEPENDENCY, KEYBIND_TASK_ADD_TAG, KEYBIND_TASK_DELETE,
-        KEYBIND_TASK_MARK_DONE, KEYBIND_TASK_MARK_STARTED, KEYBIND_TASK_NEW, KEYBIND_TASK_RENAME,
+        KEYBIND_TASK_MARK_STARTED, KEYBIND_TASK_NEW, KEYBIND_TASK_RENAME,
     },
     ui::{
         constants::{
@@ -142,7 +142,7 @@ impl Component for BasicTaskList {
             frame_storage.selected_task_id.is_some(),
         );
         frame_storage.add_keybind(
-            KEYBIND_TASK_MARK_DONE.to_string(),
+            "⏎",
             "Mark as done",
             frame_storage.selected_task_id.is_some(),
         );
@@ -317,7 +317,7 @@ impl Component for BasicTaskList {
 
                     true
                 }
-                (KeyCode::Char(KEYBIND_TASK_MARK_DONE), KeyModifiers::NONE) => {
+                (KeyCode::Enter, KeyModifiers::NONE) => {
                     let task = &mut state.database[tasks[self.index].id()];
                     if task.time_completed.is_none() {
                         task.time_completed = Some(
