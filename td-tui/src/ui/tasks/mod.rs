@@ -39,9 +39,11 @@ impl Component for TaskPage {
     ) {
         if self.selection_index == 0 {
             self.list.pre_render(global_state, frame_storage);
+            frame_storage.add_keybind("→", "Select settings pane", true);
         }
         if self.selection_index == 1 {
             self.settings.pre_render(global_state, frame_storage);
+            frame_storage.add_keybind("←", "Select tasks pane", true);
         }
     }
 
