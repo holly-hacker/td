@@ -23,7 +23,10 @@ use crate::{
             BOLD, COMPLETED_TASK, FG_DIM, FG_GREEN, FG_RED, FG_WHITE, ITALIC, LIST_HIGHLIGHT_STYLE,
             LIST_STYLE, STARTED_TASK,
         },
-        modal::{list_search::ListSearchModal, text_input::TextInputModal},
+        modal::{
+            confirmation::ConfirmationModal, list_search::ListSearchModal,
+            text_input::TextInputModal,
+        },
         task_info::TaskInfoDisplay,
         AppState, Component, FrameLocalStorage,
     },
@@ -34,6 +37,7 @@ pub struct BasicTaskList {
     create_task_modal: TextInputModal,
     new_tag_modal: TextInputModal,
     rename_task_modal: TextInputModal,
+    delete_task_modal: ConfirmationModal,
     search_box_depend_on: ListSearchModal<TaskId>,
     newest_first: bool,
 }
@@ -47,6 +51,10 @@ impl BasicTaskList {
             create_task_modal: TextInputModal::new("Create new task".to_string()),
             new_tag_modal: TextInputModal::new("Add new tag".to_string()),
             rename_task_modal: TextInputModal::new("Rename task".to_string()),
+            delete_task_modal: ConfirmationModal::new(
+                "Do you want to delete this task?".to_string(),
+            )
+            .with_title("Delete Task".to_string()),
             search_box_depend_on: ListSearchModal::new(
                 "Choose which task to depend on".to_string(),
             ),
@@ -122,6 +130,8 @@ impl Component for BasicTaskList {
         self.create_task_modal
             .pre_render(global_state, frame_storage);
         self.rename_task_modal
+            .pre_render(global_state, frame_storage);
+        self.delete_task_modal
             .pre_render(global_state, frame_storage);
         self.new_tag_modal.pre_render(global_state, frame_storage);
         self.search_box_depend_on
@@ -209,6 +219,8 @@ impl Component for BasicTaskList {
             .render(frame, area, state, frame_storage);
         self.rename_task_modal
             .render(frame, area, state, frame_storage);
+        self.delete_task_modal
+            .render(frame, area, state, frame_storage);
         self.new_tag_modal.render(frame, area, state, frame_storage);
         self.search_box_depend_on
             .render(frame, area, state, frame_storage);
@@ -226,6 +238,9 @@ impl Component for BasicTaskList {
             .process_input(key, state, frame_storage)
             || self
                 .rename_task_modal
+                .process_input(key, state, frame_storage)
+            || self
+                .delete_task_modal
                 .process_input(key, state, frame_storage)
             || self.new_tag_modal.process_input(key, state, frame_storage)
             || self
@@ -259,6 +274,18 @@ impl Component for BasicTaskList {
                     let selected_task = &mut state.database[tasks[self.index].id()];
                     selected_task.title = text;
 
+                    state.mark_database_dirty();
+                }
+                true
+            } else {
+                false
+            }
+        } else if self.delete_task_modal.is_open() {
+            // popup is open
+            if key.code == KeyCode::Enter {
+                if self.delete_task_modal.close() && !tasks.is_empty() {
+                    // delete
+                    state.database.remove_task(tasks[self.index].id());
                     state.mark_database_dirty();
                 }
                 true
@@ -336,11 +363,7 @@ impl Component for BasicTaskList {
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
-                    if !tasks.is_empty() {
-                        // delete
-                        state.database.remove_task(tasks[self.index].id());
-                        state.mark_database_dirty();
-                    }
+                    self.delete_task_modal.open(true);
 
                     true
                 }

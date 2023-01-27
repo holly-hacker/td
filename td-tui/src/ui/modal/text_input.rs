@@ -50,6 +50,7 @@ impl Component for TextInputModal {
         frame_storage: &mut crate::ui::FrameLocalStorage,
     ) {
         if let Some(input) = &self.input {
+            debug_assert!(self.is_open());
             input.pre_render(global_state, frame_storage);
 
             // NOTE: could check if at least 1 character is entered, as an option

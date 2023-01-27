@@ -61,7 +61,7 @@ impl<TKey: Eq + Clone> Component for ListSearchModal<TKey> {
         global_state: &crate::ui::AppState,
         frame_storage: &mut crate::ui::FrameLocalStorage,
     ) {
-        if self.items.is_some() {
+        if self.is_open() {
             self.filter_box.pre_render(global_state, frame_storage);
 
             let mut results = self.get_seach_results();

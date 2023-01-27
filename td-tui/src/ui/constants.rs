@@ -47,6 +47,20 @@ pub const ITALIC: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
+pub const TEXT: Style = Style {
+    fg: Some(Color::White),
+    bg: Some(Color::Black),
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+pub const TEXT_INVERTED: Style = Style {
+    fg: Some(Color::Black),
+    bg: Some(Color::White),
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
 pub const STARTED_TASK: Style = Style {
     fg: Some(Color::Yellow),
     bg: None,

@@ -9,7 +9,7 @@ use crate::{
         constants::{TEXTBOX_STYLE, TEXTBOX_STYLE_BG},
         AppState, Component, FrameLocalStorage,
     },
-    utils::process_textbox_input,
+    utils::{process_textbox_input, wrap_text},
 };
 
 pub struct MultilineTextBoxComponent {
@@ -44,22 +44,9 @@ impl MultilineTextBoxComponent {
         self.input.value()
     }
 
+    #[must_use]
     pub fn text_wrapped(&self, width: u16) -> Vec<String> {
-        use textwrap::{core::break_words, wrap_algorithms::wrap_first_fit, WordSeparator};
-
-        // see process at https://docs.rs/textwrap/latest/textwrap/core/index.html
-        // we need to do this manually because we want to retain whitespace at the end of lines
-        let text = self.input.value();
-        let words = WordSeparator::AsciiSpace.find_words(text);
-        let words = break_words(words, width as usize);
-        let lines = wrap_first_fit(&words, &[width as f64]);
-        let strings = lines.into_iter().map(|words| {
-            words
-                .iter()
-                .map(|word| format!("{}{}", word.word, word.whitespace))
-                .collect::<String>()
-        });
-        strings.collect()
+        wrap_text(self.input.value(), width)
     }
 
     fn get_text_position(naive_cursor_pos: usize, text_wrapped: &[String]) -> (u16, u16) {
@@ -102,7 +89,7 @@ impl Component for MultilineTextBoxComponent {
         let text_wrapped = self.text_wrapped(area.width);
         let wrapped = text_wrapped
             .iter()
-            .map(|cow| Spans::from(Span::from(cow.clone())))
+            .map(|string| Spans::from(Span::from(string.as_str())))
             .collect::<Vec<_>>();
         let paragraph = Paragraph::new(wrapped).style(if self.has_background {
             TEXTBOX_STYLE_BG

@@ -65,6 +65,22 @@ impl RectExt for Rect {
     }
 }
 
+pub fn wrap_text(text: &str, width: u16) -> Vec<String> {
+    // see process at https://docs.rs/textwrap/latest/textwrap/core/index.html
+    // we need to do this manually because we want to retain whitespace at the end of lines
+    use textwrap::{core::break_words, wrap_algorithms::wrap_first_fit, WordSeparator};
+    let words = WordSeparator::AsciiSpace.find_words(text);
+    let words = break_words(words, width as usize);
+    let lines = wrap_first_fit(&words, &[width as f64]);
+    let strings = lines.into_iter().map(|words| {
+        words
+            .iter()
+            .map(|word| format!("{}{}", word.word, word.whitespace))
+            .collect::<String>()
+    });
+    strings.collect()
+}
+
 pub fn wrap_spans<'span>(
     spans: impl IntoIterator<Item = Span<'span>>,
     width: u16,
