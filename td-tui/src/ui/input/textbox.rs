@@ -73,8 +73,6 @@ impl Component for TextBoxComponent {
         });
         frame.render_widget(paragraph, area);
 
-        // TODO: cursor seems to flash and move around. show this differently? maybe put the cursor
-        // position in the paragraph as styling?
         if self.focused {
             frame.set_cursor(area.x + self.input.visual_cursor() as u16, area.y);
         }
