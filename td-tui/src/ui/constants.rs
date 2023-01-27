@@ -12,6 +12,20 @@ pub const FG_WHITE: Style = Style {
     sub_modifier: Modifier::empty(),
 };
 
+pub const FG_LIGHT: Style = Style {
+    fg: Some(Color::Gray),
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+pub const FG_DIM: Style = Style {
+    fg: Some(Color::DarkGray),
+    bg: None,
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
 pub const FG_GREEN: Style = Style {
     fg: Some(Color::Green),
     bg: None,
@@ -21,13 +35,6 @@ pub const FG_GREEN: Style = Style {
 
 pub const FG_RED: Style = Style {
     fg: Some(Color::Red),
-    bg: None,
-    add_modifier: Modifier::empty(),
-    sub_modifier: Modifier::empty(),
-};
-
-pub const FG_DIM: Style = Style {
-    fg: Some(Color::DarkGray),
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),

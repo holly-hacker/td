@@ -96,10 +96,7 @@ impl Component for ModalCollection {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-    use td_lib::database::Database;
 
     use super::*;
     use crate::ui::{AppState, Component};
@@ -149,10 +146,7 @@ mod tests {
         let mut collection = ModalCollection::default();
         _ = collection.insert(TestComponent);
 
-        let mut app_state = AppState {
-            database: Database::default(),
-            path: PathBuf::new(),
-        };
+        let mut app_state = AppState::default();
         let mut frame_storage = Default::default();
 
         collection.pre_render(&app_state, &mut frame_storage);

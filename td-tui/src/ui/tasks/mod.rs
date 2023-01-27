@@ -1,3 +1,4 @@
+use crossterm::event::KeyCode;
 use predicates::BoxPredicate;
 use td_lib::database::Task;
 use tui::{
@@ -5,19 +6,28 @@ use tui::{
     widgets::{Block, BorderType, Borders},
 };
 
-use self::{task_info::TaskInfoDisplay, task_list::TaskList};
-use super::{constants::FG_WHITE, Component};
+use self::{task_info::TaskInfoDisplay, task_list::TaskList, task_list_settings::TaskListSettings};
+use super::{
+    constants::{FG_DIM, FG_LIGHT, FG_WHITE},
+    Component,
+};
+use crate::utils::RectExt;
 
 mod task_info;
 mod task_list;
+mod task_list_settings;
 
 pub struct TaskPage {
     list: TaskList,
+    settings: TaskListSettings,
+    selection_index: usize,
 }
 impl TaskPage {
     pub(crate) fn new(filter: BoxPredicate<Task>) -> Self {
         Self {
             list: TaskList::new(filter),
+            selection_index: 0,
+            settings: TaskListSettings::default(),
         }
     }
 }
@@ -28,7 +38,12 @@ impl Component for TaskPage {
         global_state: &super::AppState,
         frame_storage: &mut super::FrameLocalStorage,
     ) {
-        self.list.pre_render(global_state, frame_storage);
+        if self.selection_index == 0 {
+            self.list.pre_render(global_state, frame_storage);
+        }
+        if self.selection_index == 1 {
+            self.settings.pre_render(global_state, frame_storage);
+        }
     }
 
     fn render(
@@ -49,22 +64,46 @@ impl Component for TaskPage {
         // render task list
         let list_block = Block::default()
             .title("Tasks")
+            .style(if self.selection_index == 0 {
+                FG_WHITE
+            } else {
+                FG_DIM
+            })
             .borders(Borders::ALL)
-            .border_style(FG_WHITE)
             .border_type(BorderType::Rounded);
         let inner_list_area = list_block.inner(list_area);
         frame.render_widget(list_block, list_area);
         self.list
             .render(frame, inner_list_area, state, frame_storage);
 
-        // render info
-        let info_block = Block::default()
-            .title("Task Info")
+        // split up the info area
+        let list_settings_area = info_area.take_y(12);
+        let task_info_area = info_area.skip_y(12);
+
+        // render list settings
+        let list_settings_block = Block::default()
+            .title("Task List Settings")
+            .style(if self.selection_index == 1 {
+                FG_WHITE
+            } else {
+                FG_DIM
+            })
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
-        let inner_info_area = info_block.inner(info_area);
-        frame.render_widget(info_block, info_area);
-        TaskInfoDisplay.render(frame, inner_info_area, state, frame_storage);
+        let inner_list_settings_area = list_settings_block.inner(list_settings_area);
+        frame.render_widget(list_settings_block, list_settings_area);
+        self.settings
+            .render(frame, inner_list_settings_area, state, frame_storage);
+
+        // render task info
+        let task_info_block = Block::default()
+            .title("Task Info")
+            .style(FG_LIGHT)
+            .borders(Borders::ALL)
+            .border_type(BorderType::Plain);
+        let inner_task_info_area = task_info_block.inner(task_info_area);
+        frame.render_widget(task_info_block, task_info_area);
+        TaskInfoDisplay.render(frame, inner_task_info_area, state, frame_storage);
     }
 
     fn process_input(
@@ -73,10 +112,24 @@ impl Component for TaskPage {
         state: &mut super::AppState,
         frame_storage: &super::FrameLocalStorage,
     ) -> bool {
-        if self.list.process_input(key, state, frame_storage) {
+        if self.selection_index == 0 && self.list.process_input(key, state, frame_storage) {
+            return true;
+        }
+        if self.selection_index == 1 && self.settings.process_input(key, state, frame_storage) {
             return true;
         }
 
-        false
+        // if not handled by selected pane
+        match key.code {
+            KeyCode::Left => {
+                self.selection_index = self.selection_index.saturating_sub(1).min(1);
+                true
+            }
+            KeyCode::Right => {
+                self.selection_index = self.selection_index.saturating_add(1).min(1);
+                true
+            }
+            _ => false,
+        }
     }
 }

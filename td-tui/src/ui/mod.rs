@@ -19,9 +19,12 @@ mod modal;
 mod tab_layout;
 mod tasks;
 
+#[cfg_attr(test, derive(Default))]
 pub struct AppState {
     pub database: Database,
     pub path: PathBuf,
+
+    pub sort_oldest_first: bool,
 }
 
 impl AppState {
@@ -38,7 +41,11 @@ impl AppState {
 
         let database = db_info.try_into()?;
 
-        Ok(Self { database, path })
+        Ok(Self {
+            database,
+            path,
+            sort_oldest_first: false,
+        })
     }
 
     pub fn run_loop(

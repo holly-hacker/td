@@ -58,8 +58,10 @@ impl TaskList {
         let mut tasks = state.database.get_all_tasks().cloned().collect::<Vec<_>>();
 
         // sort
-        // TODO: add back custom sorting
-        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created).reverse());
+        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
+        if !state.sort_oldest_first {
+            tasks.reverse();
+        }
 
         // filter
         tasks.retain(|x| self.filter.eval(x));
