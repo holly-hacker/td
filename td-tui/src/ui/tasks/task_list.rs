@@ -23,12 +23,7 @@ use crate::{
             BOLD, COMPLETED_TASK, FG_DIM, FG_GREEN, FG_RED, FG_WHITE, ITALIC, LIST_HIGHLIGHT_STYLE,
             LIST_STYLE, STARTED_TASK,
         },
-        modal::{
-            confirmation::ConfirmationModal,
-            list_search::ListSearchModal,
-            modal_collection::{ModalCollection, ModalKey},
-            text_input::TextInputModal,
-        },
+        modal::{ConfirmationModal, ListSearchModal, ModalCollection, ModalKey, TextInputModal},
         task_info::TaskInfoDisplay,
         AppState, Component, FrameLocalStorage,
     },
