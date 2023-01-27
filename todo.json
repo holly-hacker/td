@@ -153,7 +153,9 @@
         ],
         "id": "ryB8Jh8G",
         "title": "Filter completed tasks",
-        "time_created": "2023-01-07 23:37:20.7870466 +01:00:00"
+        "time_created": "2023-01-07 23:37:20.7870466 +01:00:00",
+        "time_started": "2023-01-27 21:27:10.1122548 +01:00:00",
+        "time_completed": "2023-01-27 21:56:06.5688125 +01:00:00"
       },
       {
         "dependencies": [

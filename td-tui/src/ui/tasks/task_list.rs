@@ -1,6 +1,7 @@
 use std::{collections::HashSet, io::Stdout};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use predicates::{prelude::*, BoxPredicate};
 use td_lib::{
     database::{Task, TaskId},
     time::OffsetDateTime,
@@ -37,13 +38,13 @@ pub struct BasicTaskList {
     rename_task_modal: ModalKey<TextInputModal>,
     delete_task_modal: ModalKey<ConfirmationModal>,
     search_box_depend_on: ModalKey<ListSearchModal<TaskId>>,
-    newest_first: bool,
+    filter: BoxPredicate<Task>,
 }
 
 impl BasicTaskList {
     const SCROLL_PAGE_UP_DOWN: usize = 32;
 
-    pub fn new(reverse: bool) -> Self {
+    pub fn new(filter: BoxPredicate<Task>) -> Self {
         let mut modal_collection = ModalCollection::default();
         Self {
             index: 0,
@@ -60,17 +61,19 @@ impl BasicTaskList {
                 "Choose which task to depend on".to_string(),
             )),
             modal_collection,
-            newest_first: reverse,
+            filter,
         }
     }
 
-    fn get_sorted_task_list(&self, state: &AppState) -> Vec<Task> {
+    fn get_task_list(&self, state: &AppState) -> Vec<Task> {
         let mut tasks = state.database.get_all_tasks().cloned().collect::<Vec<_>>();
 
-        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created));
-        if self.newest_first {
-            tasks.reverse();
-        }
+        // sort
+        // TODO: add back custom sorting
+        tasks.sort_by(|a, b| a.time_created.cmp(&b.time_created).reverse());
+
+        // filter
+        tasks.retain(|x| self.filter.eval(x));
 
         tasks
     }
@@ -126,7 +129,7 @@ impl BasicTaskList {
 impl Component for BasicTaskList {
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
         // store currently selected task in frame storage
-        let task_list = self.get_sorted_task_list(global_state);
+        let task_list = self.get_task_list(global_state);
         frame_storage.selected_task_id = task_list.get(self.index).map(|x| x.id().clone());
 
         self.modal_collection
@@ -181,15 +184,11 @@ impl Component for BasicTaskList {
         let list_area = layout[0];
         let info_area = layout[1];
 
-        let task_list = self.get_sorted_task_list(state);
+        let task_list = self.get_task_list(state);
 
         // render the list
         let block = Block::default()
-            .title(if self.newest_first {
-                "Basic Task List"
-            } else {
-                "Basic Task List (oldest first)"
-            })
+            .title("Tasks")
             .borders(Borders::ALL)
             .border_style(FG_WHITE)
             .border_type(BorderType::Rounded);
@@ -228,7 +227,7 @@ impl Component for BasicTaskList {
             return true;
         }
 
-        let tasks = self.get_sorted_task_list(state);
+        let tasks = self.get_task_list(state);
 
         if !tasks.is_empty() {
             self.index = self.index.clamp(0, tasks.len() - 1);

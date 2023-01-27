@@ -2,8 +2,9 @@ use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use downcast_rs::{impl_downcast, Downcast};
+use predicates::{prelude::predicate, PredicateBoxExt};
 use td_lib::{
-    database::{database_file::DatabaseFile, Database, TaskId},
+    database::{database_file::DatabaseFile, Database, Task, TaskId},
     errors::DatabaseReadError,
 };
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
@@ -153,12 +154,14 @@ impl LayoutRoot {
         Self {
             tabs: TabLayout::new([
                 (
-                    "Newest",
-                    Box::new(BasicTaskList::new(true)) as Box<dyn Component>,
+                    "Unfinished tasks",
+                    Box::new(BasicTaskList::new(
+                        predicate::function(|x: &Task| x.time_completed.is_none()).boxed(),
+                    )) as Box<dyn Component>,
                 ),
                 (
-                    "Oldest",
-                    Box::new(BasicTaskList::new(false)) as Box<dyn Component>,
+                    "All tasks",
+                    Box::new(BasicTaskList::new(predicate::always().boxed())) as Box<dyn Component>,
                 ),
             ]),
         }
