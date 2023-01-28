@@ -78,8 +78,8 @@ impl Component for TaskPage {
             .render(frame, inner_list_area, state, frame_storage);
 
         // split up the info area
-        let list_settings_area = info_area.take_y(12);
-        let task_info_area = info_area.skip_y(12);
+        let list_settings_area = info_area.take_y(TaskListSettings::UI_HEIGHT + 2);
+        let task_info_area = info_area.skip_y(TaskListSettings::UI_HEIGHT + 2);
 
         // render list settings
         let list_settings_block = Block::default()

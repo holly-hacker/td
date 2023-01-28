@@ -15,6 +15,8 @@ pub struct TaskListSettings {
 }
 
 impl TaskListSettings {
+    pub const UI_HEIGHT: u16 = 5;
+
     const SETTING_COUNT: usize = 2;
 
     const INDEX_SORT_OLDEST: usize = 0;
