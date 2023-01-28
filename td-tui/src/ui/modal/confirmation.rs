@@ -105,11 +105,9 @@ impl Component for ConfirmationModal {
         frame.render_widget(Clear, block_area);
         frame.render_widget(block, block_area);
 
-        frame.render_widget(
-            Paragraph::new(wrapped_text),
-            block_area_inner.skip_last_y(1),
-        );
-        frame.render_widget(buttons, block_area_inner.take_last_y(1));
+        let (area_text, area_buttons) = block_area_inner.split_last_y(1);
+        frame.render_widget(Paragraph::new(wrapped_text), area_text);
+        frame.render_widget(buttons, area_buttons);
     }
 
     fn process_input(

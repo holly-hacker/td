@@ -120,17 +120,10 @@ impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
         frame.render_widget(Clear, block_area);
         frame.render_widget(block, block_area);
 
-        self.filter_box.render(
-            frame,
-            block_area_inner.take_y(TextBoxComponent::HEIGHT),
-            state,
-            frame_storage,
-        );
-        frame.render_stateful_widget(
-            list,
-            block_area_inner.skip_y(TextBoxComponent::HEIGHT),
-            &mut list_state,
-        );
+        let (filter_area, list_area) = block_area_inner.split_y(TextBoxComponent::HEIGHT);
+        self.filter_box
+            .render(frame, filter_area, state, frame_storage);
+        frame.render_stateful_widget(list, list_area, &mut list_state);
     }
 
     fn process_input(

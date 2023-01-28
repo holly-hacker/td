@@ -1,3 +1,5 @@
+use std::ops::{Bound, RangeBounds};
+
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::{
     layout::Rect,
@@ -17,18 +19,21 @@ pub trait RectExt {
     fn skip_last_x(self, amount: u16) -> Self;
     fn skip_last_y(self, amount: u16) -> Self;
 
-    fn split_x(self, amount: u16) -> (Self, Self)
+    fn split_x(self, index: u16) -> (Self, Self)
     where
         Self: Sized;
-    fn split_y(self, amount: u16) -> (Self, Self)
+    fn split_y(self, index: u16) -> (Self, Self)
     where
         Self: Sized;
-    fn split_last_x(self, amount: u16) -> (Self, Self)
+    fn split_last_x(self, index: u16) -> (Self, Self)
     where
         Self: Sized;
-    fn split_last_y(self, amount: u16) -> (Self, Self)
+    fn split_last_y(self, index: u16) -> (Self, Self)
     where
         Self: Sized;
+
+    fn slice_x(self, range: impl RangeBounds<u16>) -> Self;
+    fn slice_y(self, range: impl RangeBounds<u16>) -> Self;
 
     /// Creates a rect in the center of this one.
     fn center_rect(&self, width: u16, height: u16) -> Self;
@@ -66,20 +71,48 @@ impl RectExt for Rect {
         Self::new(self.x, self.y, self.width, self.height - amount)
     }
 
-    fn split_x(self, amount: u16) -> (Self, Self) {
-        (self.take_x(amount), self.skip_x(amount))
+    fn split_x(self, index: u16) -> (Self, Self) {
+        (self.take_x(index), self.skip_x(index))
     }
 
-    fn split_y(self, amount: u16) -> (Self, Self) {
-        (self.take_y(amount), self.skip_y(amount))
+    fn split_y(self, index: u16) -> (Self, Self) {
+        (self.take_y(index), self.skip_y(index))
     }
 
-    fn split_last_x(self, amount: u16) -> (Self, Self) {
-        (self.skip_last_x(amount), self.take_last_x(amount))
+    fn split_last_x(self, index: u16) -> (Self, Self) {
+        (self.skip_last_x(index), self.take_last_x(index))
     }
 
-    fn split_last_y(self, amount: u16) -> (Self, Self) {
-        (self.skip_last_y(amount), self.take_last_y(amount))
+    fn split_last_y(self, index: u16) -> (Self, Self) {
+        (self.skip_last_y(index), self.take_last_y(index))
+    }
+
+    fn slice_x(self, range: impl RangeBounds<u16>) -> Self {
+        let start = match range.start_bound() {
+            Bound::Included(&x) => x,
+            Bound::Excluded(&x) => x + 1,
+            Bound::Unbounded => 0,
+        };
+        let end = match range.end_bound() {
+            Bound::Included(&x) => x + 1,
+            Bound::Excluded(&x) => x,
+            Bound::Unbounded => self.width,
+        };
+        self.skip_x(start).take_x(end - start)
+    }
+
+    fn slice_y(self, range: impl RangeBounds<u16>) -> Self {
+        let start = match range.start_bound() {
+            Bound::Included(&y) => y,
+            Bound::Excluded(&y) => y + 1,
+            Bound::Unbounded => 0,
+        };
+        let end = match range.end_bound() {
+            Bound::Included(&y) => y + 1,
+            Bound::Excluded(&y) => y,
+            Bound::Unbounded => self.height,
+        };
+        self.skip_y(start).take_y(end - start)
     }
 
     fn center_rect(&self, width: u16, height: u16) -> Self {
@@ -202,6 +235,64 @@ mod tests {
     #[test]
     fn test_skip_last_y() {
         assert_eq!(START_RECT.skip_last_y(3), Rect::new(100, 100, 10, 17));
+    }
+
+    #[test]
+    fn test_split_x() {
+        assert_eq!(
+            START_RECT.split_x(2),
+            (Rect::new(100, 100, 2, 20), Rect::new(102, 100, 8, 20))
+        );
+    }
+
+    #[test]
+    fn test_split_y() {
+        assert_eq!(
+            START_RECT.split_y(2),
+            (Rect::new(100, 100, 10, 2), Rect::new(100, 102, 10, 18))
+        );
+    }
+
+    #[test]
+    fn test_split_last_x() {
+        assert_eq!(
+            START_RECT.split_last_x(2),
+            (Rect::new(100, 100, 8, 20), Rect::new(108, 100, 2, 20))
+        );
+    }
+
+    #[test]
+    fn test_split_last_y() {
+        assert_eq!(
+            START_RECT.split_last_y(2),
+            (Rect::new(100, 100, 10, 18), Rect::new(100, 118, 10, 2))
+        );
+    }
+
+    #[test]
+    fn test_slice_x() {
+        assert_eq!(START_RECT.slice_x(..), START_RECT);
+        assert_eq!(START_RECT.slice_x(0..), START_RECT);
+        assert_eq!(START_RECT.slice_x(..10), START_RECT);
+        assert_eq!(START_RECT.slice_x(0..10), START_RECT);
+        assert_eq!(START_RECT.slice_x(..=9), START_RECT);
+        assert_eq!(START_RECT.slice_x(0..=9), START_RECT);
+
+        assert_eq!(START_RECT.slice_x(2..8), Rect::new(102, 100, 6, 20));
+        assert_eq!(START_RECT.slice_x(2..=7), Rect::new(102, 100, 6, 20));
+    }
+
+    #[test]
+    fn test_slice_y() {
+        assert_eq!(START_RECT.slice_y(..), START_RECT);
+        assert_eq!(START_RECT.slice_y(0..), START_RECT);
+        assert_eq!(START_RECT.slice_y(..20), START_RECT);
+        assert_eq!(START_RECT.slice_y(0..20), START_RECT);
+        assert_eq!(START_RECT.slice_y(..=19), START_RECT);
+        assert_eq!(START_RECT.slice_y(0..=19), START_RECT);
+
+        assert_eq!(START_RECT.slice_y(2..18), Rect::new(100, 102, 10, 16));
+        assert_eq!(START_RECT.slice_y(2..=17), Rect::new(100, 102, 10, 16));
     }
 
     #[test]

@@ -218,8 +218,7 @@ impl Component for LayoutRoot {
     ) {
         let height = wrap_spans(KeybindList::get_spans(frame_storage), area.width).len() as u16;
 
-        let area_tabs = area.skip_last_y(height);
-        let area_keybinds = area.take_last_y(height);
+        let (area_tabs, area_keybinds) = area.split_last_y(height);
         self.tabs.render(frame, area_tabs, state, frame_storage);
 
         KeybindList.render(frame, area_keybinds, state, frame_storage);

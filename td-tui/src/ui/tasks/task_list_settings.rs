@@ -43,9 +43,11 @@ impl Component for TaskListSettings {
         state: &crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,
     ) {
+        let (area_sorting, area_filter) = area.split_y(3);
+
         frame.render_widget(
             Paragraph::new("Sorting:").style(SETTINGS_HEADER),
-            area.skip_y(0).take_y(1).take_x("Sorting:".len() as u16),
+            area_sorting.slice_y(0..=0).take_x("Sorting:".len() as u16),
         );
         frame.render_widget(
             Paragraph::new(format!(
@@ -57,12 +59,12 @@ impl Component for TaskListSettings {
             } else {
                 NO_STYLE
             }),
-            area.skip_y(1).take_y(1),
+            area_sorting.slice_y(1..=1),
         );
 
         frame.render_widget(
             Paragraph::new("Filter:").style(SETTINGS_HEADER),
-            area.skip_y(3).take_y(1).take_x("Filter:".len() as u16),
+            area_filter.slice_y(0..=0).take_x("Filter:".len() as u16),
         );
         frame.render_widget(
             Paragraph::new(format!(
@@ -74,7 +76,7 @@ impl Component for TaskListSettings {
             } else {
                 NO_STYLE
             }),
-            area.skip_y(4).take_y(1),
+            area_filter.slice_y(1..=1),
         );
     }
 
