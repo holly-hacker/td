@@ -23,7 +23,7 @@ impl Component for DirtyIndicator {
         state: &super::AppState,
         _frame_storage: &super::FrameLocalStorage,
     ) {
-        let text = if state.is_dirty { "*" } else { " " };
+        let text = if state.database.is_dirty() { "*" } else { " " };
         let p = Paragraph::new(Span::styled(
             text,
             Style::default()

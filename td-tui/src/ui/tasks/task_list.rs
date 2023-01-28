@@ -208,8 +208,9 @@ impl Component for TaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.modal_collection[self.create_task_modal].close() {
-                    state.database.add_task(Task::create_now(text));
-                    state.mark_database_dirty();
+                    state
+                        .database
+                        .modify(|x| x.add_task(Task::create_now(text)));
                 }
                 true
             } else {
@@ -219,10 +220,10 @@ impl Component for TaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.modal_collection[self.rename_task_modal].close() {
-                    let selected_task = &mut state.database[tasks[self.index].id()];
-                    selected_task.title = text;
-
-                    state.mark_database_dirty();
+                    state.database.modify(|db| {
+                        let selected_task = &mut db[tasks[self.index].id()];
+                        selected_task.title = text;
+                    });
                 }
                 true
             } else {
@@ -233,8 +234,9 @@ impl Component for TaskList {
             if key.code == KeyCode::Enter {
                 if self.modal_collection[self.delete_task_modal].close() && !tasks.is_empty() {
                     // delete
-                    state.database.remove_task(tasks[self.index].id());
-                    state.mark_database_dirty();
+                    state
+                        .database
+                        .modify(|x| x.remove_task(tasks[self.index].id()));
                 }
                 true
             } else {
@@ -244,10 +246,10 @@ impl Component for TaskList {
             // popup is open
             if key.code == KeyCode::Enter {
                 if let Some(text) = self.modal_collection[self.new_tag_modal].close() {
-                    let selected_task = &mut state.database[tasks[self.index].id()];
-                    selected_task.tags.push(text);
-
-                    state.mark_database_dirty();
+                    state.database.modify(|db| {
+                        let selected_task = &mut db[tasks[self.index].id()];
+                        selected_task.tags.push(text);
+                    });
                 }
                 true
             } else {
@@ -261,9 +263,7 @@ impl Component for TaskList {
                 {
                     state
                         .database
-                        .add_dependency(tasks[self.index].id(), &selected_task_id);
-
-                    state.mark_database_dirty();
+                        .modify(|x| x.add_dependency(tasks[self.index].id(), &selected_task_id));
                 }
 
                 true
@@ -274,32 +274,32 @@ impl Component for TaskList {
             // take our own input
             match (key.code, key.modifiers) {
                 (KeyCode::Char(KEYBIND_TASK_MARK_STARTED), KeyModifiers::NONE) => {
-                    let task = &mut state.database[tasks[self.index].id()];
-                    if task.time_started.is_none() {
-                        task.time_started = Some(
-                            OffsetDateTime::now_local()
-                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                        );
-                    } else {
-                        task.time_started = None;
-                    }
-
-                    state.mark_database_dirty();
+                    state.database.modify(|db| {
+                        let task = &mut db[tasks[self.index].id()];
+                        if task.time_started.is_none() {
+                            task.time_started = Some(
+                                OffsetDateTime::now_local()
+                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                            );
+                        } else {
+                            task.time_started = None;
+                        }
+                    });
 
                     true
                 }
                 (KeyCode::Enter, KeyModifiers::NONE) => {
-                    let task = &mut state.database[tasks[self.index].id()];
-                    if task.time_completed.is_none() {
-                        task.time_completed = Some(
-                            OffsetDateTime::now_local()
-                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                        );
-                    } else {
-                        task.time_completed = None;
-                    }
-
-                    state.mark_database_dirty();
+                    state.database.modify(|db| {
+                        let task = &mut db[tasks[self.index].id()];
+                        if task.time_completed.is_none() {
+                            task.time_completed = Some(
+                                OffsetDateTime::now_local()
+                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                            );
+                        } else {
+                            task.time_completed = None;
+                        }
+                    });
 
                     true
                 }

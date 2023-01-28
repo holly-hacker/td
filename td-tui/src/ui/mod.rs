@@ -15,7 +15,10 @@ use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 use self::{
     keybind_list::KeybindList, modal::ConfirmationModal, tab_layout::TabLayout, tasks::TaskPage,
 };
-use crate::utils::{wrap_spans, RectExt};
+use crate::{
+    undo::UndoWrapper,
+    utils::{wrap_spans, RectExt},
+};
 
 mod constants;
 mod dirty_indicator;
@@ -27,11 +30,10 @@ mod tasks;
 
 #[cfg_attr(test, derive(Default))]
 pub struct AppState {
-    pub database: Database,
+    pub database: UndoWrapper<Database>,
     pub path: PathBuf,
 
     should_exit: bool,
-    is_dirty: bool,
 
     pub sort_oldest_first: bool,
     pub filter_completed: bool,
@@ -49,13 +51,13 @@ impl AppState {
             DatabaseFile::read(&path)?
         };
 
-        let database = db_info.try_into()?;
+        let mut database: UndoWrapper<Database> = UndoWrapper::new(db_info.try_into()?);
+        database.mark_clean();
 
         Ok(Self {
             database,
             path,
             should_exit: false,
-            is_dirty: false,
             sort_oldest_first: false,
             filter_completed: true,
         })
@@ -89,18 +91,12 @@ impl AppState {
         self.should_exit = true;
     }
 
-    /// Marks the database as having being edited.
-    pub fn mark_database_dirty(&mut self) {
-        self.is_dirty = true;
-
-        // TODO: store undo state?
-    }
-
+    /// Saves the database to disk and marks it as clean.
     pub fn save(&mut self) {
         // TODO: error handling. show popup on failure to save?
-        let db_info: DatabaseFile = (&self.database).into();
+        let db_info: DatabaseFile = (&*self.database).into();
         db_info.write(&self.path).unwrap();
-        self.is_dirty = false;
+        self.database.mark_clean();
     }
 
     pub fn get_task_filter_predicate(&self) -> BoxPredicate<Task> {
@@ -205,7 +201,9 @@ impl Component for LayoutRoot {
             .pre_render(state, frame_storage);
         self.tabs.pre_render(state, frame_storage);
 
-        frame_storage.add_keybind("^s", "Save", state.is_dirty);
+        frame_storage.add_keybind("^s", "Save", state.database.is_dirty());
+        frame_storage.add_keybind("u", "Undo", state.database.undo_count() > 0);
+        frame_storage.add_keybind("U", "Redo", state.database.redo_count() > 0);
         frame_storage.add_keybind("⎋, q", "Quit", true);
     }
 
@@ -261,8 +259,16 @@ impl Component for LayoutRoot {
                 state.save();
                 true
             }
+            (KeyCode::Char('u'), KeyModifiers::NONE) if state.database.undo_count() > 0 => {
+                state.database.undo();
+                true
+            }
+            (KeyCode::Char('U'), KeyModifiers::SHIFT) if state.database.redo_count() > 0 => {
+                state.database.redo();
+                true
+            }
             (KeyCode::Char('q') | KeyCode::Esc, _) => {
-                if state.is_dirty {
+                if state.database.is_dirty() {
                     self.save_unsaved_confirmation.open(true);
                 } else {
                     state.request_exit();
