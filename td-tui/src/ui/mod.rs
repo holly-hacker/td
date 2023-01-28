@@ -1,6 +1,6 @@
 use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use downcast_rs::{impl_downcast, Downcast};
 use predicates::{
     prelude::{predicate, PredicateBooleanExt},
@@ -12,10 +12,13 @@ use td_lib::{
 };
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 
-use self::{keybind_list::KeybindList, tab_layout::TabLayout, tasks::TaskPage};
+use self::{
+    keybind_list::KeybindList, modal::ConfirmationModal, tab_layout::TabLayout, tasks::TaskPage,
+};
 use crate::utils::{wrap_spans, RectExt};
 
 mod constants;
+mod dirty_indicator;
 mod input;
 mod keybind_list;
 mod modal;
@@ -26,6 +29,9 @@ mod tasks;
 pub struct AppState {
     pub database: Database,
     pub path: PathBuf,
+
+    should_exit: bool,
+    is_dirty: bool,
 
     pub sort_oldest_first: bool,
     pub filter_completed: bool,
@@ -48,6 +54,8 @@ impl AppState {
         Ok(Self {
             database,
             path,
+            should_exit: false,
+            is_dirty: false,
             sort_oldest_first: false,
             filter_completed: true,
         })
@@ -62,20 +70,14 @@ impl AppState {
         loop {
             let mut frame_storage = FrameLocalStorage::default();
             root_component.pre_render(self, &mut frame_storage);
-            frame_storage.add_keybind("⎋, q", "Quit", true);
 
             terminal.draw(|f| root_component.render(f, f.size(), self, &frame_storage))?;
 
             if let Event::Key(key) = event::read()? {
-                let handled = root_component.process_input(key, self, &frame_storage);
-                if !handled {
-                    match key.code {
-                        KeyCode::Char('q') | KeyCode::Esc => break,
-                        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                            break
-                        }
-                        _ => (),
-                    }
+                _ = root_component.process_input(key, self, &frame_storage);
+
+                if self.should_exit {
+                    break;
                 }
             }
         }
@@ -83,11 +85,22 @@ impl AppState {
         Ok(())
     }
 
+    pub fn request_exit(&mut self) {
+        self.should_exit = true;
+    }
+
+    /// Marks the database as having being edited.
     pub fn mark_database_dirty(&mut self) {
+        self.is_dirty = true;
+
+        // TODO: store undo state?
+    }
+
+    pub fn save(&mut self) {
         // TODO: error handling. show popup on failure to save?
-        // TODO: don't immediately save, store dirty flag instead.
         let db_info: DatabaseFile = (&self.database).into();
         db_info.write(&self.path).unwrap();
+        self.is_dirty = false;
     }
 
     pub fn get_task_filter_predicate(&self) -> BoxPredicate<Task> {
@@ -171,19 +184,28 @@ impl_downcast!(Component);
 
 struct LayoutRoot {
     tabs: TabLayout,
+    save_unsaved_confirmation: ConfirmationModal,
 }
 
 impl LayoutRoot {
     fn new() -> Self {
         Self {
             tabs: TabLayout::new([("Tasks", Box::new(TaskPage::new()) as Box<dyn Component>)]),
+            save_unsaved_confirmation: ConfirmationModal::new(
+                "There are unsaved changes. Do you want to save before quitting?".into(),
+            )
+            .with_title("Save before quitting?".into()),
         }
     }
 }
 
 impl Component for LayoutRoot {
-    fn pre_render(&self, global_state: &AppState, storage: &mut FrameLocalStorage) {
-        self.tabs.pre_render(global_state, storage);
+    fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
+        self.save_unsaved_confirmation
+            .pre_render(global_state, frame_storage);
+        self.tabs.pre_render(global_state, frame_storage);
+
+        frame_storage.add_keybind("⎋, q", "Quit", true);
     }
 
     fn render(
@@ -200,6 +222,9 @@ impl Component for LayoutRoot {
         self.tabs.render(frame, area_tabs, state, frame_storage);
 
         KeybindList.render(frame, area_keybinds, state, frame_storage);
+
+        self.save_unsaved_confirmation
+            .render(frame, area, state, frame_storage);
     }
 
     fn process_input(
@@ -208,6 +233,39 @@ impl Component for LayoutRoot {
         state: &mut AppState,
         frame_storage: &FrameLocalStorage,
     ) -> bool {
-        self.tabs.process_input(key, state, frame_storage)
+        if self
+            .save_unsaved_confirmation
+            .process_input(key, state, frame_storage)
+        {
+            return true;
+        }
+
+        if self.save_unsaved_confirmation.is_open() {
+            if key.code == KeyCode::Enter {
+                if self.save_unsaved_confirmation.close() {
+                    state.save();
+                }
+                state.request_exit();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        if self.tabs.process_input(key, state, frame_storage) {
+            return true;
+        }
+
+        match key.code {
+            KeyCode::Char('q') | KeyCode::Esc => {
+                if state.is_dirty {
+                    self.save_unsaved_confirmation.open(true);
+                } else {
+                    state.request_exit();
+                }
+                true
+            }
+            _ => false,
+        }
     }
 }

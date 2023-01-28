@@ -3,6 +3,7 @@ use tui::{symbols, text::Spans, widgets::Tabs};
 
 use super::{
     constants::{TAB_HIGHLIGHT_STYLE, TAB_STYLE},
+    dirty_indicator::DirtyIndicator,
     Component,
 };
 use crate::utils::RectExt;
@@ -52,8 +53,10 @@ impl Component for TabLayout {
         state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,
     ) {
-        let area_tabs = area.take_y(1);
-        let area_content = area.skip_y(1);
+        let (area_tab_row, area_content) = area.split_y(1);
+        let (area_dirty_indicator, area_tabs) = area_tab_row.split_x(2);
+
+        DirtyIndicator.render(frame, area_dirty_indicator.skip_x(1), state, frame_storage);
 
         let titles = self
             .titles

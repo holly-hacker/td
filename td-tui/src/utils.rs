@@ -17,6 +17,19 @@ pub trait RectExt {
     fn skip_last_x(self, amount: u16) -> Self;
     fn skip_last_y(self, amount: u16) -> Self;
 
+    fn split_x(self, amount: u16) -> (Self, Self)
+    where
+        Self: Sized;
+    fn split_y(self, amount: u16) -> (Self, Self)
+    where
+        Self: Sized;
+    fn split_last_x(self, amount: u16) -> (Self, Self)
+    where
+        Self: Sized;
+    fn split_last_y(self, amount: u16) -> (Self, Self)
+    where
+        Self: Sized;
+
     /// Creates a rect in the center of this one.
     fn center_rect(&self, width: u16, height: u16) -> Self;
 }
@@ -51,6 +64,22 @@ impl RectExt for Rect {
 
     fn skip_last_y(self, amount: u16) -> Self {
         Self::new(self.x, self.y, self.width, self.height - amount)
+    }
+
+    fn split_x(self, amount: u16) -> (Self, Self) {
+        (self.take_x(amount), self.skip_x(amount))
+    }
+
+    fn split_y(self, amount: u16) -> (Self, Self) {
+        (self.take_y(amount), self.skip_y(amount))
+    }
+
+    fn split_last_x(self, amount: u16) -> (Self, Self) {
+        (self.skip_last_x(amount), self.take_last_x(amount))
+    }
+
+    fn split_last_y(self, amount: u16) -> (Self, Self) {
+        (self.skip_last_y(amount), self.take_last_y(amount))
     }
 
     fn center_rect(&self, width: u16, height: u16) -> Self {
