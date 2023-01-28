@@ -1,6 +1,6 @@
 use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use downcast_rs::{impl_downcast, Downcast};
 use predicates::{
     prelude::{predicate, PredicateBooleanExt},
@@ -200,11 +200,12 @@ impl LayoutRoot {
 }
 
 impl Component for LayoutRoot {
-    fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
+    fn pre_render(&self, state: &AppState, frame_storage: &mut FrameLocalStorage) {
         self.save_unsaved_confirmation
-            .pre_render(global_state, frame_storage);
-        self.tabs.pre_render(global_state, frame_storage);
+            .pre_render(state, frame_storage);
+        self.tabs.pre_render(state, frame_storage);
 
+        frame_storage.add_keybind("^s", "Save", state.is_dirty);
         frame_storage.add_keybind("⎋, q", "Quit", true);
     }
 
@@ -256,8 +257,12 @@ impl Component for LayoutRoot {
             return true;
         }
 
-        match key.code {
-            KeyCode::Char('q') | KeyCode::Esc => {
+        match (key.code, key.modifiers) {
+            (KeyCode::Char('s'), KeyModifiers::CONTROL) => {
+                state.save();
+                true
+            }
+            (KeyCode::Char('q') | KeyCode::Esc, _) => {
                 if state.is_dirty {
                     self.save_unsaved_confirmation.open(true);
                 } else {
