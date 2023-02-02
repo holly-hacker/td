@@ -5,12 +5,12 @@ use std::{
 
 use crate::ui::Component;
 
-pub struct ModalKey<T: Component> {
+pub struct CollectionKey<T: Component> {
     index: usize,
     data: PhantomData<T>,
 }
 
-impl<T: Component> Clone for ModalKey<T> {
+impl<T: Component> Clone for CollectionKey<T> {
     fn clone(&self) -> Self {
         Self {
             index: self.index,
@@ -18,50 +18,51 @@ impl<T: Component> Clone for ModalKey<T> {
         }
     }
 }
-impl<T: Component> Copy for ModalKey<T> {}
+impl<T: Component> Copy for CollectionKey<T> {}
 
+/// A collection of components that operate independently from eachother.
 #[derive(Default)]
-pub struct ModalCollection {
-    modals: Vec<Box<dyn Component>>,
+pub struct ComponentCollection {
+    components: Vec<Box<dyn Component>>,
 }
 
-impl ModalCollection {
+impl ComponentCollection {
     // NOTE: could separate into mutable and immutable components, ie. a mutable builder and immutable collection
-    pub fn insert<T: Component + 'static>(&mut self, item: T) -> ModalKey<T> {
+    pub fn insert<T: Component + 'static>(&mut self, item: T) -> CollectionKey<T> {
         let my_box: Box<dyn Component> = Box::new(item);
-        self.modals.push(my_box);
-        ModalKey {
-            index: self.modals.len() - 1,
+        self.components.push(my_box);
+        CollectionKey {
+            index: self.components.len() - 1,
             data: PhantomData::default(),
         }
     }
 }
 
-impl<TComponent: Component> Index<ModalKey<TComponent>> for ModalCollection {
+impl<TComponent: Component> Index<CollectionKey<TComponent>> for ComponentCollection {
     type Output = TComponent;
 
-    fn index(&self, key: ModalKey<TComponent>) -> &Self::Output {
-        self.modals[key.index]
+    fn index(&self, key: CollectionKey<TComponent>) -> &Self::Output {
+        self.components[key.index]
             .downcast_ref()
             .expect("retrieve component")
     }
 }
 
-impl<TComponent: Component> IndexMut<ModalKey<TComponent>> for ModalCollection {
-    fn index_mut(&mut self, key: ModalKey<TComponent>) -> &mut Self::Output {
-        self.modals[key.index]
+impl<TComponent: Component> IndexMut<CollectionKey<TComponent>> for ComponentCollection {
+    fn index_mut(&mut self, key: CollectionKey<TComponent>) -> &mut Self::Output {
+        self.components[key.index]
             .downcast_mut()
             .expect("retrieve component")
     }
 }
 
-impl Component for ModalCollection {
+impl Component for ComponentCollection {
     fn pre_render(
         &self,
         global_state: &crate::ui::AppState,
         frame_storage: &mut crate::ui::FrameLocalStorage,
     ) {
-        self.modals
+        self.components
             .iter()
             .for_each(|m| m.pre_render(global_state, frame_storage))
     }
@@ -73,7 +74,7 @@ impl Component for ModalCollection {
         state: &crate::ui::AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
     ) {
-        self.modals
+        self.components
             .iter()
             .for_each(|m| m.render(frame, area, state, frame_storage))
     }
@@ -84,8 +85,8 @@ impl Component for ModalCollection {
         state: &mut crate::ui::AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
     ) -> bool {
-        for modal in &mut self.modals {
-            if modal.process_input(key, state, frame_storage) {
+        for component in &mut self.components {
+            if component.process_input(key, state, frame_storage) {
                 return true;
             }
         }
@@ -130,10 +131,10 @@ mod tests {
     }
 
     #[test]
-    /// This test ensures that there are no downcast errors when getting modals
-    /// by their concrete type
+    /// This test ensures that there are no downcast errors when getting
+    /// components by their concrete type.
     pub fn retrieve_does_not_panic() {
-        let mut collection = ModalCollection::default();
+        let mut collection = ComponentCollection::default();
         let key = collection.insert(TestComponent);
         _ = &collection[key];
         _ = &mut collection[key];
@@ -141,9 +142,9 @@ mod tests {
 
     #[test]
     /// This test ensures that there are no downcast errors when iterating over
-    /// modals internally.
+    /// components internally.
     pub fn component_methods_do_not_panic() {
-        let mut collection = ModalCollection::default();
+        let mut collection = ComponentCollection::default();
         _ = collection.insert(TestComponent);
 
         let mut app_state = AppState::default();

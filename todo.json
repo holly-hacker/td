@@ -54,7 +54,6 @@
       },
       {
         "dependencies": [
-          "pFe2UwKF",
           "8Z3SV7ow"
         ],
         "id": "rhxJqctK",
@@ -113,7 +112,7 @@
       },
       {
         "id": "cb9PHuuB",
-        "title": "List of all tags",
+        "title": "Add tab for global tag operations",
         "time_created": "2023-01-07 23:00:44.0378671 +01:00:00"
       },
       {
@@ -302,6 +301,14 @@
         "id": "8cFnHUHe",
         "title": "Add descriptions to tags",
         "time_created": "2023-01-27 22:28:29.5292424 +01:00:00"
+      },
+      {
+        "id": "r2ahz5ZQ",
+        "title": "Create command-line interactions",
+        "time_created": "2023-02-02 18:18:42.1500339 +01:00:00",
+        "tags": [
+          "collection"
+        ]
       }
     ]
   }

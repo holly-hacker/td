@@ -20,6 +20,7 @@ use crate::{
     utils::{wrap_spans, RectExt},
 };
 
+mod component_collection;
 mod constants;
 mod dirty_indicator;
 mod input;

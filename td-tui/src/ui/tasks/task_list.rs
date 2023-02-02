@@ -16,24 +16,29 @@ use tui::{
 
 use crate::{
     keybinds::*,
-    ui::{constants::*, modal::*, AppState, Component, FrameLocalStorage},
+    ui::{
+        component_collection::{CollectionKey, ComponentCollection},
+        constants::*,
+        modal::*,
+        AppState, Component, FrameLocalStorage,
+    },
 };
 
 pub struct TaskList {
     index: usize,
-    modal_collection: ModalCollection,
-    create_task_modal: ModalKey<TextInputModal>,
-    new_tag_modal: ModalKey<TextInputModal>,
-    rename_task_modal: ModalKey<TextInputModal>,
-    delete_task_modal: ModalKey<ConfirmationModal>,
-    search_box_depend_on: ModalKey<ListSearchModal<TaskId>>,
+    modals: ComponentCollection,
+    create_task_modal: CollectionKey<TextInputModal>,
+    new_tag_modal: CollectionKey<TextInputModal>,
+    rename_task_modal: CollectionKey<TextInputModal>,
+    delete_task_modal: CollectionKey<ConfirmationModal>,
+    search_box_depend_on: CollectionKey<ListSearchModal<TaskId>>,
 }
 
 impl TaskList {
     const SCROLL_PAGE_UP_DOWN: usize = 32;
 
     pub fn new() -> Self {
-        let mut modal_collection = ModalCollection::default();
+        let mut modal_collection = ComponentCollection::default();
         Self {
             index: 0,
             create_task_modal: modal_collection
@@ -48,7 +53,7 @@ impl TaskList {
             search_box_depend_on: modal_collection.insert(ListSearchModal::new(
                 "Choose which task to depend on".to_string(),
             )),
-            modal_collection,
+            modals: modal_collection,
         }
     }
 
@@ -121,8 +126,7 @@ impl Component for TaskList {
         let task_list = self.get_task_list(global_state);
         frame_storage.selected_task_id = task_list.get(self.index).map(|x| x.id().clone());
 
-        self.modal_collection
-            .pre_render(global_state, frame_storage);
+        self.modals.pre_render(global_state, frame_storage);
 
         frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
         frame_storage.add_keybind(
@@ -180,7 +184,7 @@ impl Component for TaskList {
         frame.render_stateful_widget(list, area, &mut list_state);
 
         // if needed, render popups
-        self.modal_collection
+        self.modals
             .render(frame, frame.size(), state, frame_storage);
     }
 
@@ -191,10 +195,7 @@ impl Component for TaskList {
         frame_storage: &FrameLocalStorage,
     ) -> bool {
         // check modals
-        if self
-            .modal_collection
-            .process_input(key, state, frame_storage)
-        {
+        if self.modals.process_input(key, state, frame_storage) {
             return true;
         }
 
@@ -204,10 +205,10 @@ impl Component for TaskList {
             self.index = self.index.clamp(0, tasks.len() - 1);
         }
 
-        if self.modal_collection[self.create_task_modal].is_open() {
+        if self.modals[self.create_task_modal].is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(text) = self.modal_collection[self.create_task_modal].close() {
+                if let Some(text) = self.modals[self.create_task_modal].close() {
                     state
                         .database
                         .modify(|x| x.add_task(Task::create_now(text)));
@@ -216,10 +217,10 @@ impl Component for TaskList {
             } else {
                 false
             }
-        } else if self.modal_collection[self.rename_task_modal].is_open() {
+        } else if self.modals[self.rename_task_modal].is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(text) = self.modal_collection[self.rename_task_modal].close() {
+                if let Some(text) = self.modals[self.rename_task_modal].close() {
                     state.database.modify(|db| {
                         let selected_task = &mut db[tasks[self.index].id()];
                         selected_task.title = text;
@@ -229,10 +230,10 @@ impl Component for TaskList {
             } else {
                 false
             }
-        } else if self.modal_collection[self.delete_task_modal].is_open() {
+        } else if self.modals[self.delete_task_modal].is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if self.modal_collection[self.delete_task_modal].close() && !tasks.is_empty() {
+                if self.modals[self.delete_task_modal].close() && !tasks.is_empty() {
                     // delete
                     state
                         .database
@@ -242,10 +243,10 @@ impl Component for TaskList {
             } else {
                 false
             }
-        } else if self.modal_collection[self.new_tag_modal].is_open() {
+        } else if self.modals[self.new_tag_modal].is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(text) = self.modal_collection[self.new_tag_modal].close() {
+                if let Some(text) = self.modals[self.new_tag_modal].close() {
                     state.database.modify(|db| {
                         let selected_task = &mut db[tasks[self.index].id()];
                         selected_task.tags.push(text);
@@ -255,12 +256,10 @@ impl Component for TaskList {
             } else {
                 false
             }
-        } else if self.modal_collection[self.search_box_depend_on].is_open() {
+        } else if self.modals[self.search_box_depend_on].is_open() {
             // popup is open
             if key.code == KeyCode::Enter {
-                if let Some(selected_task_id) =
-                    self.modal_collection[self.search_box_depend_on].close()
-                {
+                if let Some(selected_task_id) = self.modals[self.search_box_depend_on].close() {
                     state
                         .database
                         .modify(|x| x.add_dependency(tasks[self.index].id(), &selected_task_id));
@@ -304,23 +303,23 @@ impl Component for TaskList {
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_NEW), KeyModifiers::NONE) => {
-                    self.modal_collection[self.create_task_modal].open();
+                    self.modals[self.create_task_modal].open();
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_RENAME), KeyModifiers::NONE) => {
-                    self.modal_collection[self.rename_task_modal]
+                    self.modals[self.rename_task_modal]
                         .open_with_text(tasks[self.index].title.clone());
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
-                    self.modal_collection[self.delete_task_modal].open(true);
+                    self.modals[self.delete_task_modal].open(true);
 
                     true
                 }
                 (KeyCode::Char(KEYBIND_TASK_ADD_TAG), KeyModifiers::NONE) => {
                     if !tasks.is_empty() {
                         // add tag to currently selected task
-                        self.modal_collection[self.new_tag_modal].open();
+                        self.modals[self.new_tag_modal].open();
                     }
 
                     true
@@ -339,7 +338,7 @@ impl Component for TaskList {
                         .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
                         .map(|w| (w.id().clone(), w.title.clone()))
                         .collect();
-                    self.modal_collection[self.search_box_depend_on].open(candidate_tasks);
+                    self.modals[self.search_box_depend_on].open(candidate_tasks);
                     true
                 }
                 (KeyCode::Up, KeyModifiers::NONE) => {
