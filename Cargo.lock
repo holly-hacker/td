@@ -391,9 +391,17 @@ dependencies = [
  "downcast-rs",
  "predicates",
  "td-lib",
+ "td-util",
  "textwrap",
  "tui",
  "tui-input",
+]
+
+[[package]]
+name = "td-util"
+version = "0.1.0"
+dependencies = [
+ "td-lib",
 ]
 
 [[package]]

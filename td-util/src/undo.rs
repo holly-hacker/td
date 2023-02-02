@@ -1,6 +1,12 @@
+//! Provides generic undo functionality on an arbitrary state object.
+
 use std::ops::Deref;
 
 // TODO: trim start of stack to ensure memory usage doesn't grow out of control
+
+/// A wrapper for a state, allowing rolling back changes using an undo-redo system.
+///
+/// This operates by keeping around copies of the state, with a pointer to the current state.
 pub struct UndoWrapper<T: Clone> {
     states: Vec<T>,
     current_index: usize,
@@ -8,6 +14,7 @@ pub struct UndoWrapper<T: Clone> {
 }
 
 impl<T: Clone> UndoWrapper<T> {
+    /// Create a new instance with the given state as the current (and only) state.
     pub fn new(initial_state: T) -> Self {
         Self {
             states: vec![initial_state],
@@ -16,6 +23,7 @@ impl<T: Clone> UndoWrapper<T> {
         }
     }
 
+    /// Gets a reference to the current state.
     pub fn state(&self) -> &T {
         debug_assert!(!self.states.is_empty());
         debug_assert!(self.states.len() > self.current_index);
@@ -28,6 +36,8 @@ impl<T: Clone> UndoWrapper<T> {
         &mut self.states[self.current_index]
     }
 
+    /// Gets a mutable reference to the current state. Doing this will create a new copy of the
+    /// state that gets mutated, allowing calling undo to roll back to the previous state later.
     pub fn modify<F: FnOnce(&mut T)>(&mut self, func: F) {
         self.clear_redo_states();
 
@@ -46,6 +56,8 @@ impl<T: Clone> UndoWrapper<T> {
         }
     }
 
+    /// Sets the current state pointer back one state, if possible. Returns `true` if the current
+    /// state has changed.
     pub fn undo(&mut self) -> bool {
         if self.current_index > 0 {
             self.current_index -= 1;
@@ -55,10 +67,13 @@ impl<T: Clone> UndoWrapper<T> {
         }
     }
 
+    /// Returns how many times the state can be reverted.
     pub fn undo_count(&self) -> usize {
         self.current_index
     }
 
+    /// Forwards the state one stage after calling [Self::undo]. This will only work right before
+    /// an undo, modifying the current state using [Self::modify] will clear the redo queue.
     pub fn redo(&mut self) -> bool {
         if self.current_index < self.states.len() - 1 {
             self.current_index += 1;
@@ -68,14 +83,18 @@ impl<T: Clone> UndoWrapper<T> {
         }
     }
 
+    /// Returns how many times the state can be forwarded.
     pub fn redo_count(&self) -> usize {
         self.states.len() - 1 - self.current_index
     }
 
+    /// Marks the current state as the "clean" state. This can be used to keep track of which state
+    /// is consistent with an externally saved one, such as the version "on disk".
     pub fn mark_clean(&mut self) {
         self.clean_index = Some(self.current_index);
     }
 
+    /// Returns whether the current state is "dirty". See [Self::mark_clean].
     pub fn is_dirty(&self) -> bool {
         self.clean_index != Some(self.current_index)
     }

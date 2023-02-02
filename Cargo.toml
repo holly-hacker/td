@@ -1,2 +1,2 @@
 [workspace]
-members = ["td-tui", "td-lib"]
+members = ["td-tui", "td-util", "td-lib"]

@@ -10,15 +10,13 @@ use td_lib::{
     database::{database_file::DatabaseFile, Database, Task, TaskId},
     errors::DatabaseReadError,
 };
+use td_util::undo::UndoWrapper;
 use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 
 use self::{
     keybind_list::KeybindList, modal::ConfirmationModal, tab_layout::TabLayout, tasks::TaskPage,
 };
-use crate::{
-    undo::UndoWrapper,
-    utils::{wrap_spans, RectExt},
-};
+use crate::utils::{wrap_spans, RectExt};
 
 mod component_collection;
 mod constants;
