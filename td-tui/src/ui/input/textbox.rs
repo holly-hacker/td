@@ -57,8 +57,6 @@ impl Default for TextBoxComponent {
 }
 
 impl Component for TextBoxComponent {
-    fn pre_render(&self, _global_state: &AppState, _frame_storage: &mut FrameLocalStorage) {}
-
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,

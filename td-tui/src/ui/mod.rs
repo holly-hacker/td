@@ -155,7 +155,7 @@ pub trait Component: Downcast {
     /// Executed before the render pass. Can be used to collect information that is required in the
     /// render pass and to register keybind hints. This is guaranteed to run once before each
     /// [Component::render] call.
-    fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage);
+    fn pre_render(&self, _global_state: &AppState, _frame_storage: &mut FrameLocalStorage) {}
 
     /// Render the component and its children to the given area.
     fn render(
@@ -170,10 +170,12 @@ pub trait Component: Downcast {
     /// component or one of its children and no other components should process them.
     fn process_input(
         &mut self,
-        key: KeyEvent,
-        state: &mut AppState,
-        frame_storage: &FrameLocalStorage,
-    ) -> bool;
+        _key: KeyEvent,
+        _state: &mut AppState,
+        _frame_storage: &FrameLocalStorage,
+    ) -> bool {
+        false
+    }
 }
 
 impl_downcast!(Component);

@@ -104,13 +104,6 @@ mod tests {
 
     struct TestComponent;
     impl Component for TestComponent {
-        fn pre_render(
-            &self,
-            _global_state: &crate::ui::AppState,
-            _frame_storage: &mut crate::ui::FrameLocalStorage,
-        ) {
-        }
-
         fn render(
             &self,
             _frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
@@ -118,15 +111,6 @@ mod tests {
             _state: &crate::ui::AppState,
             _frame_storage: &crate::ui::FrameLocalStorage,
         ) {
-        }
-
-        fn process_input(
-            &mut self,
-            _key: crossterm::event::KeyEvent,
-            _state: &mut crate::ui::AppState,
-            _frame_storage: &crate::ui::FrameLocalStorage,
-        ) -> bool {
-            false
         }
     }
 

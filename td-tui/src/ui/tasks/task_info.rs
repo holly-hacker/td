@@ -12,8 +12,6 @@ use crate::ui::{
 pub struct TaskInfoDisplay;
 
 impl Component for TaskInfoDisplay {
-    fn pre_render(&self, _global_state: &AppState, _frame_storage: &mut FrameLocalStorage) {}
-
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
@@ -114,14 +112,5 @@ impl Component for TaskInfoDisplay {
         }
 
         frame.render_widget(Paragraph::new(spans), area);
-    }
-
-    fn process_input(
-        &mut self,
-        _key: crossterm::event::KeyEvent,
-        _state: &mut AppState,
-        _frame_storage: &FrameLocalStorage,
-    ) -> bool {
-        false
     }
 }

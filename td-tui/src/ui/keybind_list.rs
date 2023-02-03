@@ -46,13 +46,6 @@ impl KeybindList {
 }
 
 impl Component for KeybindList {
-    fn pre_render(
-        &self,
-        _global_state: &super::AppState,
-        _frame_storage: &mut super::FrameLocalStorage,
-    ) {
-    }
-
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
@@ -63,14 +56,5 @@ impl Component for KeybindList {
         let spans = wrap_spans(Self::get_spans(frame_storage), area.width);
         let paragraph = Paragraph::new(spans);
         frame.render_widget(paragraph, area);
-    }
-
-    fn process_input(
-        &mut self,
-        _key: crossterm::event::KeyEvent,
-        _state: &mut super::AppState,
-        _frame_storage: &super::FrameLocalStorage,
-    ) -> bool {
-        false
     }
 }

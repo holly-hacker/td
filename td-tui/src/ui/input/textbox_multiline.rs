@@ -7,7 +7,7 @@ use tui_input::Input;
 use crate::{
     ui::{
         constants::{TEXTBOX_STYLE, TEXTBOX_STYLE_BG},
-        AppState, Component, FrameLocalStorage,
+        Component,
     },
     utils::{process_textbox_input, wrap_text},
 };
@@ -77,8 +77,6 @@ impl Default for MultilineTextBoxComponent {
 }
 
 impl Component for MultilineTextBoxComponent {
-    fn pre_render(&self, _global_state: &AppState, _frame_storage: &mut FrameLocalStorage) {}
-
     fn render(
         &self,
         frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
