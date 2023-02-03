@@ -1,6 +1,6 @@
 use std::{collections::HashSet, io::Stdout};
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::KeyEvent;
 use predicates::prelude::*;
 use td_lib::{
     database::{Task, TaskId},
@@ -128,36 +128,30 @@ impl Component for TaskList {
 
         self.modals.pre_render(global_state, frame_storage);
 
-        frame_storage.add_keybind("⇅", "Navigate list", task_list.len() >= 2);
-        frame_storage.add_keybind(
-            KEYBIND_TASK_MARK_STARTED.to_string(),
-            "Mark as started",
+        frame_storage.register_keybind(KEYBIND_CONTROLS_LIST_NAV_EXT, task_list.len() >= 2);
+        frame_storage.register_keybind(
+            KEYBIND_TASK_MARK_STARTED,
             frame_storage.selected_task_id.is_some(),
         );
-        frame_storage.add_keybind(
-            "⏎",
-            "Mark as done",
+        frame_storage.register_keybind(
+            KEYBIND_TASK_MARK_DONE,
             frame_storage.selected_task_id.is_some(),
         );
-        frame_storage.add_keybind(KEYBIND_TASK_NEW.to_string(), "New task", true);
-        frame_storage.add_keybind(
-            KEYBIND_TASK_DELETE.to_string(),
-            "Delete task",
+        frame_storage.register_keybind(KEYBIND_TASK_NEW, true);
+        frame_storage.register_keybind(
+            KEYBIND_TASK_DELETE,
             frame_storage.selected_task_id.is_some(),
         );
-        frame_storage.add_keybind(
-            KEYBIND_TASK_ADD_TAG.to_string(),
-            "Add tag",
+        frame_storage.register_keybind(
+            KEYBIND_TASK_ADD_TAG,
             frame_storage.selected_task_id.is_some(),
         );
-        frame_storage.add_keybind(
-            KEYBIND_TASK_ADD_DEPENDENCY.to_string(),
-            "Add dependency",
+        frame_storage.register_keybind(
+            KEYBIND_TASK_ADD_DEPENDENCY,
             frame_storage.selected_task_id.is_some(),
         );
-        frame_storage.add_keybind(
-            KEYBIND_TASK_RENAME.to_string(),
-            "Rename",
+        frame_storage.register_keybind(
+            KEYBIND_TASK_RENAME,
             frame_storage.selected_task_id.is_some(),
         );
     }
@@ -207,7 +201,7 @@ impl Component for TaskList {
 
         if self.modals[self.create_task_modal].is_open() {
             // popup is open
-            if key.code == KeyCode::Enter {
+            if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(text) = self.modals[self.create_task_modal].close() {
                     state
                         .database
@@ -219,7 +213,7 @@ impl Component for TaskList {
             }
         } else if self.modals[self.rename_task_modal].is_open() {
             // popup is open
-            if key.code == KeyCode::Enter {
+            if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(text) = self.modals[self.rename_task_modal].close() {
                     state.database.modify(|db| {
                         let selected_task = &mut db[tasks[self.index].id()];
@@ -232,7 +226,7 @@ impl Component for TaskList {
             }
         } else if self.modals[self.delete_task_modal].is_open() {
             // popup is open
-            if key.code == KeyCode::Enter {
+            if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if self.modals[self.delete_task_modal].close() && !tasks.is_empty() {
                     // delete
                     state
@@ -245,7 +239,7 @@ impl Component for TaskList {
             }
         } else if self.modals[self.new_tag_modal].is_open() {
             // popup is open
-            if key.code == KeyCode::Enter {
+            if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(text) = self.modals[self.new_tag_modal].close() {
                     state.database.modify(|db| {
                         let selected_task = &mut db[tasks[self.index].id()];
@@ -258,7 +252,7 @@ impl Component for TaskList {
             }
         } else if self.modals[self.search_box_depend_on].is_open() {
             // popup is open
-            if key.code == KeyCode::Enter {
+            if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(selected_task_id) = self.modals[self.search_box_depend_on].close() {
                     state
                         .database
@@ -271,108 +265,103 @@ impl Component for TaskList {
             }
         } else {
             // take our own input
-            match (key.code, key.modifiers) {
-                (KeyCode::Char(KEYBIND_TASK_MARK_STARTED), KeyModifiers::NONE) => {
-                    state.database.modify(|db| {
-                        let task = &mut db[tasks[self.index].id()];
-                        if task.time_started.is_none() {
-                            task.time_started = Some(
-                                OffsetDateTime::now_local()
-                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                            );
-                        } else {
-                            task.time_started = None;
+            if KEYBIND_TASK_MARK_STARTED.is_match(key) {
+                state.database.modify(|db| {
+                    let task = &mut db[tasks[self.index].id()];
+                    if task.time_started.is_none() {
+                        task.time_started = Some(
+                            OffsetDateTime::now_local()
+                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                        );
+                    } else {
+                        task.time_started = None;
+                    }
+                });
+
+                true
+            } else if KEYBIND_TASK_MARK_DONE.is_match(key) {
+                state.database.modify(|db| {
+                    let task = &mut db[tasks[self.index].id()];
+                    if task.time_completed.is_none() {
+                        task.time_completed = Some(
+                            OffsetDateTime::now_local()
+                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                        );
+                    } else {
+                        task.time_completed = None;
+                    }
+                });
+
+                true
+            } else if KEYBIND_TASK_NEW.is_match(key) {
+                self.modals[self.create_task_modal].open();
+                true
+            } else if KEYBIND_TASK_RENAME.is_match(key) {
+                self.modals[self.rename_task_modal].open_with_text(tasks[self.index].title.clone());
+                true
+            } else if KEYBIND_TASK_DELETE.is_match(key) {
+                self.modals[self.delete_task_modal].open(true);
+
+                true
+            } else if KEYBIND_TASK_ADD_TAG.is_match(key) {
+                if !tasks.is_empty() {
+                    // add tag to currently selected task
+                    self.modals[self.new_tag_modal].open();
+                }
+
+                true
+            } else if KEYBIND_TASK_ADD_DEPENDENCY.is_match(key) {
+                // link to other task
+                let selected = &tasks[self.index];
+                let existing_dependency_ids = state
+                    .database
+                    .get_dependencies(selected.id())
+                    .map(|x| x.id().clone())
+                    .collect::<HashSet<_>>();
+                let candidate_tasks = tasks
+                    .iter()
+                    .filter(|t| t.id() != selected.id())
+                    .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
+                    .map(|w| (w.id().clone(), w.title.clone()))
+                    .collect();
+                self.modals[self.search_box_depend_on].open(candidate_tasks);
+                true
+            } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
+                match key {
+                    UpDownExtendedKey::Up => {
+                        self.index = self.index.saturating_sub(1);
+                        true
+                    }
+                    UpDownExtendedKey::Down => {
+                        if !tasks.is_empty() && self.index != tasks.len() - 1 {
+                            self.index += 1;
                         }
-                    });
-
-                    true
-                }
-                (KeyCode::Enter, KeyModifiers::NONE) => {
-                    state.database.modify(|db| {
-                        let task = &mut db[tasks[self.index].id()];
-                        if task.time_completed.is_none() {
-                            task.time_completed = Some(
-                                OffsetDateTime::now_local()
-                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                            );
-                        } else {
-                            task.time_completed = None;
+                        true
+                    }
+                    UpDownExtendedKey::PageUp => {
+                        self.index = self.index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
+                        true
+                    }
+                    UpDownExtendedKey::PageDown => {
+                        if !tasks.is_empty() && self.index != tasks.len() - 1 {
+                            self.index += Self::SCROLL_PAGE_UP_DOWN;
+                            self.index = self.index.min(tasks.len() - 1);
                         }
-                    });
-
-                    true
-                }
-                (KeyCode::Char(KEYBIND_TASK_NEW), KeyModifiers::NONE) => {
-                    self.modals[self.create_task_modal].open();
-                    true
-                }
-                (KeyCode::Char(KEYBIND_TASK_RENAME), KeyModifiers::NONE) => {
-                    self.modals[self.rename_task_modal]
-                        .open_with_text(tasks[self.index].title.clone());
-                    true
-                }
-                (KeyCode::Char(KEYBIND_TASK_DELETE), KeyModifiers::NONE) => {
-                    self.modals[self.delete_task_modal].open(true);
-
-                    true
-                }
-                (KeyCode::Char(KEYBIND_TASK_ADD_TAG), KeyModifiers::NONE) => {
-                    if !tasks.is_empty() {
-                        // add tag to currently selected task
-                        self.modals[self.new_tag_modal].open();
+                        true
                     }
-
-                    true
-                }
-                (KeyCode::Char(KEYBIND_TASK_ADD_DEPENDENCY), KeyModifiers::NONE) => {
-                    // link to other task
-                    let selected = &tasks[self.index];
-                    let existing_dependency_ids = state
-                        .database
-                        .get_dependencies(selected.id())
-                        .map(|x| x.id().clone())
-                        .collect::<HashSet<_>>();
-                    let candidate_tasks = tasks
-                        .iter()
-                        .filter(|t| t.id() != selected.id())
-                        .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
-                        .map(|w| (w.id().clone(), w.title.clone()))
-                        .collect();
-                    self.modals[self.search_box_depend_on].open(candidate_tasks);
-                    true
-                }
-                (KeyCode::Up, KeyModifiers::NONE) => {
-                    self.index = self.index.saturating_sub(1);
-                    true
-                }
-                (KeyCode::Down, KeyModifiers::NONE) => {
-                    if !tasks.is_empty() && self.index != tasks.len() - 1 {
-                        self.index += 1;
+                    UpDownExtendedKey::Home => {
+                        self.index = 0;
+                        true
                     }
-                    true
-                }
-                (KeyCode::PageUp, KeyModifiers::NONE) => {
-                    self.index = self.index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
-                    true
-                }
-                (KeyCode::PageDown, KeyModifiers::NONE) => {
-                    if !tasks.is_empty() && self.index != tasks.len() - 1 {
-                        self.index += Self::SCROLL_PAGE_UP_DOWN;
-                        self.index = self.index.min(tasks.len() - 1);
+                    UpDownExtendedKey::End => {
+                        if !tasks.is_empty() && self.index != tasks.len() - 1 {
+                            self.index = tasks.len() - 1;
+                        }
+                        true
                     }
-                    true
                 }
-                (KeyCode::Home, KeyModifiers::NONE) => {
-                    self.index = 0;
-                    true
-                }
-                (KeyCode::End, KeyModifiers::NONE) => {
-                    if !tasks.is_empty() && self.index != tasks.len() - 1 {
-                        self.index = tasks.len() - 1;
-                    }
-                    true
-                }
-                _ => false,
+            } else {
+                false
             }
         }
     }

@@ -1,4 +1,3 @@
-use crossterm::event::KeyCode;
 use tui::{
     layout::Alignment,
     text::{Span, Spans},
@@ -6,6 +5,7 @@ use tui::{
 };
 
 use crate::{
+    keybinds::*,
     ui::{
         constants::{MIN_MODAL_WIDTH, TEXT, TEXT_INVERTED},
         Component,
@@ -53,9 +53,9 @@ impl Component for ConfirmationModal {
         frame_storage: &mut crate::ui::FrameLocalStorage,
     ) {
         if self.is_open() {
-            frame_storage.add_keybind("⇆", "Choose option", true);
-            frame_storage.add_keybind("⏎", "Select option", true);
-            frame_storage.add_keybind("⎋", "Close", true);
+            frame_storage.register_keybind(KEYBIND_MODAL_LEFTRIGHT_OPTION, true);
+            frame_storage.register_keybind(KEYBIND_MODAL_SUBMITSELECT, true);
+            frame_storage.register_keybind(KEYBIND_MODAL_CANCEL, true);
             frame_storage.lock_keybinds();
         }
     }
@@ -116,18 +116,18 @@ impl Component for ConfirmationModal {
         _state: &mut crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,
     ) -> bool {
-        if self.is_open() && key.code == KeyCode::Esc {
+        if self.is_open() && KEYBIND_MODAL_CANCEL.is_match(key) {
             self.close();
             return true;
         }
 
         let Some(selected_value) = &mut self.selected_value else {return false;};
 
-        if let KeyCode::Left | KeyCode::Right = key.code {
+        if let Some(_key) = KEYBIND_MODAL_LEFTRIGHT_OPTION.get_match(key) {
             *selected_value = !*selected_value;
-            return true;
+            true
+        } else {
+            false
         }
-
-        false
     }
 }

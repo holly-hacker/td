@@ -1,7 +1,7 @@
-use crossterm::event::{KeyCode, KeyModifiers};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState};
 
 use crate::{
+    keybinds::*,
     ui::{
         constants::{LIST_HIGHLIGHT_STYLE, LIST_STYLE, MIN_MODAL_WIDTH},
         input::TextBoxComponent,
@@ -67,9 +67,9 @@ impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
             let mut results = self.get_seach_results();
             let at_least_1_result = results.next().is_some();
             let at_least_2_results = results.next().is_some();
-            frame_storage.add_keybind("⇅", "Navigate list", at_least_2_results);
-            frame_storage.add_keybind("⏎", "Select item", at_least_1_result);
-            frame_storage.add_keybind("⎋", "Close", true);
+            frame_storage.register_keybind(KEYBIND_CONTROLS_LIST_NAV, at_least_2_results);
+            frame_storage.register_keybind(KEYBIND_MODAL_SUBMITSELECT, at_least_1_result);
+            frame_storage.register_keybind(KEYBIND_MODAL_CANCEL, true);
             frame_storage.lock_keybinds();
         }
     }
@@ -133,7 +133,7 @@ impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
         frame_storage: &crate::ui::FrameLocalStorage,
     ) -> bool {
         // always close with Esc
-        if self.is_open() && key.code == KeyCode::Esc {
+        if self.is_open() && KEYBIND_MODAL_CANCEL.is_match(key) {
             self.close();
             return true;
         }
@@ -142,31 +142,20 @@ impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
         let filtered_item_count = self.get_seach_results().count();
 
         // NOTE: could abstract list into a component and have consistent list navigation everywhere
-        let list_handled = match (key.code, key.modifiers) {
-            (KeyCode::Up, KeyModifiers::NONE) => {
-                self.index = self.index.saturating_sub(1);
-                true
-            }
-            (KeyCode::Up, KeyModifiers::ALT) => {
-                self.index = 0;
-                true
-            }
-            (KeyCode::Down, KeyModifiers::NONE) => {
-                if filtered_item_count != 0 && self.index < filtered_item_count - 1 {
-                    self.index += 1;
+        if let Some(key) = KEYBIND_CONTROLS_LIST_NAV.get_match(key) {
+            match key {
+                UpDownKey::Up => {
+                    self.index = self.index.saturating_sub(1);
+                    true
                 }
-                true
-            }
-            (KeyCode::Down, KeyModifiers::ALT) => {
-                if filtered_item_count != 0 {
-                    self.index = filtered_item_count - 1;
+                UpDownKey::Down => {
+                    if filtered_item_count != 0 && self.index < filtered_item_count - 1 {
+                        self.index += 1;
+                    }
+                    true
                 }
-                true
             }
-            _ => false,
-        };
-
-        if !list_handled {
+        } else {
             let search_updated = self.filter_box.process_input(key, state, frame_storage);
 
             if search_updated {
@@ -174,10 +163,10 @@ impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
                     self.index = self.index.clamp(0, filtered_item_count - 1);
                 }
 
-                return true;
+                true
+            } else {
+                false
             }
         }
-
-        false
     }
 }

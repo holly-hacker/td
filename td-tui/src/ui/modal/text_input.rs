@@ -1,6 +1,6 @@
 use std::io::Stdout;
 
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 use tui::{
     backend::CrosstermBackend,
     layout::Rect,
@@ -9,6 +9,7 @@ use tui::{
 };
 
 use crate::{
+    keybinds::*,
     ui::{constants::MIN_MODAL_WIDTH, input::MultilineTextBoxComponent, AppState, Component},
     utils::RectExt,
 };
@@ -54,8 +55,8 @@ impl Component for TextInputModal {
             input.pre_render(global_state, frame_storage);
 
             // NOTE: could check if at least 1 character is entered, as an option
-            frame_storage.add_keybind("⏎", "Submit", true);
-            frame_storage.add_keybind("⎋", "Close", true);
+            frame_storage.register_keybind(KEYBIND_MODAL_SUBMIT, true);
+            frame_storage.register_keybind(KEYBIND_MODAL_CANCEL, true);
             frame_storage.lock_keybinds();
         }
     }
@@ -93,7 +94,7 @@ impl Component for TextInputModal {
         frame_storage: &crate::ui::FrameLocalStorage,
     ) -> bool {
         // always close with Esc
-        if self.is_open() && key.code == KeyCode::Esc {
+        if self.is_open() && KEYBIND_MODAL_CANCEL.is_match(key) {
             self.close();
             return true;
         }

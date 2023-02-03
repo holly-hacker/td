@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyModifiers};
+use crossterm::event::KeyCode;
 use tui::{symbols, text::Spans, widgets::Tabs};
 
 use super::{
@@ -6,7 +6,7 @@ use super::{
     dirty_indicator::DirtyIndicator,
     Component,
 };
-use crate::utils::RectExt;
+use crate::{keybinds::*, utils::RectExt};
 
 pub struct TabLayout {
     items: Vec<Box<dyn Component>>,
@@ -43,7 +43,8 @@ impl Component for TabLayout {
             component.pre_render(global_state, frame_storage)
         }
 
-        frame_storage.add_keybind("⭾", "Next tab", self.items.len() >= 2);
+        frame_storage.register_keybind(KEYBIND_TABS_NEXT, self.items.len() >= 2);
+        frame_storage.register_keybind(KEYBIND_TABS_PREV, self.items.len() >= 2);
     }
 
     fn render(
@@ -90,8 +91,18 @@ impl Component for TabLayout {
             false
         };
 
-        content_update
-            || match (key.code, key.modifiers) {
+        if content_update {
+            return true;
+        }
+
+        if KEYBIND_TABS_NEXT.is_match(key) {
+            self.index = (self.index + 1) % self.items.len();
+            true
+        } else if KEYBIND_TABS_PREV.is_match(key) {
+            self.index = (self.index + self.items.len() - 1) % self.items.len();
+            true
+        } else {
+            match (key.code, key.modifiers) {
                 (KeyCode::Char(c @ '1'..='9'), _) => {
                     let index = (c as u8 - b'1') as usize;
                     if index < self.items.len() {
@@ -101,16 +112,8 @@ impl Component for TabLayout {
                         false
                     }
                 }
-                (KeyCode::Tab, KeyModifiers::NONE) => {
-                    self.index = (self.index + 1) % self.items.len();
-                    true
-                }
-                (KeyCode::Tab | KeyCode::BackTab, KeyModifiers::SHIFT) => {
-                    self.index = (self.index + self.items.len() - 1) % self.items.len();
-                    // self.index = 1;
-                    true
-                }
                 _ => false,
             }
+        }
     }
 }

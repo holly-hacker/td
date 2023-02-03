@@ -1,7 +1,7 @@
-use crossterm::event::KeyCode;
 use tui::widgets::Paragraph;
 
 use crate::{
+    keybinds::*,
     ui::{
         constants::{LIST_HIGHLIGHT_STYLE, NO_STYLE, SETTINGS_HEADER},
         Component,
@@ -29,10 +29,10 @@ impl Component for TaskListSettings {
         _global_state: &crate::ui::AppState,
         frame_storage: &mut crate::ui::FrameLocalStorage,
     ) {
-        frame_storage.add_keybind("⇅", "Navigate list", Self::SETTING_COUNT > 1);
+        frame_storage.register_keybind(KEYBIND_CONTROLS_LIST_NAV, Self::SETTING_COUNT > 1);
 
         if self.index == Self::INDEX_SORT_OLDEST || self.index == Self::INDEX_FILTER_COMPLETED {
-            frame_storage.add_keybind(" ", "Toggle", true);
+            frame_storage.register_keybind(KEYBIND_CONTROLS_CHECKBOX_TOGGLE, true);
         }
     }
 
@@ -86,28 +86,29 @@ impl Component for TaskListSettings {
         state: &mut crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,
     ) -> bool {
-        match key.code {
-            KeyCode::Up => {
-                self.index = self.index.saturating_sub(1).min(Self::SETTING_COUNT - 1);
-                return true;
+        if let Some(key) = KEYBIND_CONTROLS_LIST_NAV.get_match(key) {
+            match key {
+                UpDownKey::Up => {
+                    self.index = self.index.saturating_sub(1).min(Self::SETTING_COUNT - 1);
+                    true
+                }
+                UpDownKey::Down => {
+                    self.index = self.index.saturating_add(1).min(Self::SETTING_COUNT - 1);
+                    true
+                }
             }
-            KeyCode::Down => {
-                self.index = self.index.saturating_add(1).min(Self::SETTING_COUNT - 1);
-                return true;
-            }
-            _ => (),
-        };
-
-        if self.index == Self::INDEX_SORT_OLDEST && key.code == KeyCode::Char(' ') {
+        } else if self.index == Self::INDEX_SORT_OLDEST
+            && KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key)
+        {
             state.sort_oldest_first = !state.sort_oldest_first;
-            return true;
-        }
-
-        if self.index == Self::INDEX_FILTER_COMPLETED && key.code == KeyCode::Char(' ') {
+            true
+        } else if self.index == Self::INDEX_FILTER_COMPLETED
+            && KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key)
+        {
             state.filter_completed = !state.filter_completed;
-            return true;
+            true
+        } else {
+            false
         }
-
-        false
     }
 }

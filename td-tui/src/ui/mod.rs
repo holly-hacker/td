@@ -1,6 +1,6 @@
 use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{self, Event, KeyEvent};
 use downcast_rs::{impl_downcast, Downcast};
 use predicates::{
     prelude::{predicate, PredicateBooleanExt},
@@ -16,7 +16,10 @@ use tui::{backend::CrosstermBackend, layout::Rect, Frame, Terminal};
 use self::{
     keybind_list::KeybindList, modal::ConfirmationModal, tab_layout::TabLayout, tasks::TaskPage,
 };
-use crate::utils::{wrap_spans, RectExt};
+use crate::{
+    keybinds::*,
+    utils::{wrap_spans, RectExt},
+};
 
 mod component_collection;
 mod constants;
@@ -125,23 +128,21 @@ pub struct FrameLocalStorage {
 
 impl FrameLocalStorage {
     /// Registers a keybind to be shown with [KeybindList].
-    pub fn add_keybind(
-        &mut self,
-        keybind: impl Into<Cow<'static, str>>,
-        description: impl Into<Cow<'static, str>>,
-        enabled: bool,
-    ) {
+    pub fn register_keybind(&mut self, keybind: &'static dyn Keybind, enabled: bool) {
         if self.keybinds_locked {
             return;
         }
 
-        let (keybind, description) = (keybind.into(), description.into());
-        debug_assert_eq!(
-            self.current_keybinds.iter().find(|x| x.0 == keybind),
-            None,
-            "duplicate keybind: {keybind} (added as '{description}')"
-        );
-        self.current_keybinds.push((keybind, description, enabled));
+        if let Some(desc) = keybind.description() {
+            let char = keybind.key_hint();
+            debug_assert_eq!(
+                self.current_keybinds.iter().find(|x| x.0 == *char),
+                None,
+                "duplicate keybind: {char} (added as '{desc}')"
+            );
+            self.current_keybinds
+                .push((char.clone(), desc.clone(), enabled));
+        }
     }
 
     /// Disallows more keybinds to be added.
@@ -200,10 +201,11 @@ impl Component for LayoutRoot {
             .pre_render(state, frame_storage);
         self.tabs.pre_render(state, frame_storage);
 
-        frame_storage.add_keybind("^s", "Save", state.database.is_dirty());
-        frame_storage.add_keybind("u", "Undo", state.database.undo_count() > 0);
-        frame_storage.add_keybind("U", "Redo", state.database.redo_count() > 0);
-        frame_storage.add_keybind("⎋, q", "Quit", true);
+        frame_storage.register_keybind(KEYBIND_SAVE, state.database.is_dirty());
+        frame_storage.register_keybind(KEYBIND_UNDO, state.database.undo_count() > 0);
+        frame_storage.register_keybind(KEYBIND_REDO, state.database.redo_count() > 0);
+        frame_storage.register_keybind(KEYBIND_QUIT, true);
+        frame_storage.register_keybind(KEYBIND_QUIT_ALT, true);
     }
 
     fn render(
@@ -238,7 +240,7 @@ impl Component for LayoutRoot {
         }
 
         if self.save_unsaved_confirmation.is_open() {
-            if key.code == KeyCode::Enter {
+            if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if self.save_unsaved_confirmation.close() {
                     state.save();
                 }
@@ -253,28 +255,24 @@ impl Component for LayoutRoot {
             return true;
         }
 
-        match (key.code, key.modifiers) {
-            (KeyCode::Char('s'), KeyModifiers::CONTROL) => {
-                state.save();
-                true
+        if KEYBIND_SAVE.is_match(key) {
+            state.save();
+            true
+        } else if KEYBIND_UNDO.is_match(key) && state.database.undo_count() > 0 {
+            state.database.undo();
+            true
+        } else if KEYBIND_REDO.is_match(key) && state.database.redo_count() > 0 {
+            state.database.redo();
+            true
+        } else if KEYBIND_QUIT.is_match(key) || KEYBIND_QUIT_ALT.is_match(key) {
+            if state.database.is_dirty() {
+                self.save_unsaved_confirmation.open(true);
+            } else {
+                state.request_exit();
             }
-            (KeyCode::Char('u'), KeyModifiers::NONE) if state.database.undo_count() > 0 => {
-                state.database.undo();
-                true
-            }
-            (KeyCode::Char('U'), KeyModifiers::SHIFT) if state.database.redo_count() > 0 => {
-                state.database.redo();
-                true
-            }
-            (KeyCode::Char('q') | KeyCode::Esc, _) => {
-                if state.database.is_dirty() {
-                    self.save_unsaved_confirmation.open(true);
-                } else {
-                    state.request_exit();
-                }
-                true
-            }
-            _ => false,
+            true
+        } else {
+            false
         }
     }
 }

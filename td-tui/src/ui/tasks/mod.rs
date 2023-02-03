@@ -1,4 +1,3 @@
-use crossterm::event::KeyCode;
 use tui::{
     layout::{Constraint, Direction, Layout},
     widgets::{Block, BorderType, Borders},
@@ -9,7 +8,7 @@ use super::{
     constants::{FG_DIM, FG_LIGHT, FG_WHITE},
     Component,
 };
-use crate::utils::RectExt;
+use crate::{keybinds::*, utils::RectExt};
 
 mod task_info;
 mod task_list;
@@ -39,11 +38,11 @@ impl Component for TaskPage {
     ) {
         if self.selection_index == 0 {
             self.list.pre_render(global_state, frame_storage);
-            frame_storage.add_keybind("→", "Select settings pane", true);
+            frame_storage.register_keybind(KEYBIND_TASKPAGE_PANE_SETTINGS, true);
         }
         if self.selection_index == 1 {
             self.settings.pre_render(global_state, frame_storage);
-            frame_storage.add_keybind("←", "Select tasks pane", true);
+            frame_storage.register_keybind(KEYBIND_TASKPAGE_PANE_TASKS, true);
         }
     }
 
@@ -121,16 +120,14 @@ impl Component for TaskPage {
         }
 
         // if not handled by selected pane
-        match key.code {
-            KeyCode::Left => {
-                self.selection_index = self.selection_index.saturating_sub(1).min(1);
-                true
-            }
-            KeyCode::Right => {
-                self.selection_index = self.selection_index.saturating_add(1).min(1);
-                true
-            }
-            _ => false,
+        if KEYBIND_TASKPAGE_PANE_TASKS.is_match(key) {
+            self.selection_index = 0;
+            true
+        } else if KEYBIND_TASKPAGE_PANE_SETTINGS.is_match(key) {
+            self.selection_index = 1;
+            true
+        } else {
+            false
         }
     }
 }
