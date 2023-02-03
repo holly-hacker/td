@@ -128,7 +128,7 @@ pub struct FrameLocalStorage {
 
 impl FrameLocalStorage {
     /// Registers a keybind to be shown with [KeybindList].
-    pub fn register_keybind(&mut self, keybind: &'static dyn Keybind, enabled: bool) {
+    pub fn register_keybind(&mut self, keybind: &dyn Keybind, enabled: bool) {
         if self.keybinds_locked {
             return;
         }
@@ -167,7 +167,7 @@ pub trait Component: Downcast {
     );
 
     /// Update state based in a key event. Returns whether the key event is handled by this
-    /// component or one of its children.
+    /// component or one of its children and no other components should process them.
     fn process_input(
         &mut self,
         key: KeyEvent,

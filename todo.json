@@ -37,6 +37,7 @@
         "title": "Create edit screen",
         "time_created": "2023-01-07 22:42:11.3189913 +01:00:00",
         "time_started": "2023-02-03 13:10:32.3169883 +01:00:00",
+        "time_completed": "2023-02-03 20:10:21.8080457 +01:00:00",
         "tags": [
           "P:2"
         ]
@@ -55,7 +56,8 @@
       },
       {
         "dependencies": [
-          "8Z3SV7ow"
+          "8Z3SV7ow",
+          "pFe2UwKF"
         ],
         "id": "rhxJqctK",
         "title": "Allow giving tasks descriptions",
@@ -172,7 +174,9 @@
           "HMpzpjaz",
           "QqDZhxfy",
           "EUwBK6eK",
-          "NDHTrVWQ"
+          "NDHTrVWQ",
+          "BNRs5van",
+          "XzGnBDnQ"
         ],
         "id": "SkHpVbJS",
         "title": "Release: v0.1",
@@ -210,6 +214,7 @@
         "id": "hcw6jDDv",
         "title": "Improve how shortcuts are handled internally",
         "time_created": "2023-01-08 13:46:46.3254092 +01:00:00",
+        "time_completed": "2023-02-03 19:57:25.2742066 +01:00:00",
         "tags": [
           "P:1"
         ]
@@ -310,6 +315,22 @@
         "tags": [
           "collection"
         ]
+      },
+      {
+        "dependencies": [
+          "pFe2UwKF"
+        ],
+        "id": "XzGnBDnQ",
+        "title": "Allow removing tags",
+        "time_created": "2023-02-03 19:57:50.5060931 +01:00:00"
+      },
+      {
+        "dependencies": [
+          "pFe2UwKF"
+        ],
+        "id": "BNRs5van",
+        "title": "Allow removing dependencies and dependents",
+        "time_created": "2023-02-03 19:57:59.8980649 +01:00:00"
       }
     ]
   }

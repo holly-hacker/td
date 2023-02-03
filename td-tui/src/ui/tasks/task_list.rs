@@ -31,6 +31,7 @@ pub struct TaskList {
     new_tag_modal: CollectionKey<TextInputModal>,
     rename_task_modal: CollectionKey<TextInputModal>,
     delete_task_modal: CollectionKey<ConfirmationModal>,
+    edit_modal: CollectionKey<KeybindSelectModal>,
     search_box_depend_on: CollectionKey<ListSearchModal<TaskId>>,
 }
 
@@ -50,6 +51,7 @@ impl TaskList {
                 ConfirmationModal::new("Do you want to delete this task?".to_string())
                     .with_title("Delete Task".to_string()),
             ),
+            edit_modal: modal_collection.insert(KeybindSelectModal::new("Select an action".into())),
             search_box_depend_on: modal_collection.insert(ListSearchModal::new(
                 "Choose which task to depend on".to_string(),
             )),
@@ -129,31 +131,16 @@ impl Component for TaskList {
         self.modals.pre_render(global_state, frame_storage);
 
         frame_storage.register_keybind(KEYBIND_CONTROLS_LIST_NAV_EXT, task_list.len() >= 2);
-        frame_storage.register_keybind(
-            KEYBIND_TASK_MARK_STARTED,
-            frame_storage.selected_task_id.is_some(),
-        );
-        frame_storage.register_keybind(
-            KEYBIND_TASK_MARK_DONE,
-            frame_storage.selected_task_id.is_some(),
-        );
+
+        let is_task_selected = frame_storage.selected_task_id.is_some();
+        frame_storage.register_keybind(KEYBIND_TASK_MARK_STARTED, is_task_selected);
+        frame_storage.register_keybind(KEYBIND_TASK_MARK_DONE, is_task_selected);
         frame_storage.register_keybind(KEYBIND_TASK_NEW, true);
-        frame_storage.register_keybind(
-            KEYBIND_TASK_DELETE,
-            frame_storage.selected_task_id.is_some(),
-        );
-        frame_storage.register_keybind(
-            KEYBIND_TASK_ADD_TAG,
-            frame_storage.selected_task_id.is_some(),
-        );
-        frame_storage.register_keybind(
-            KEYBIND_TASK_ADD_DEPENDENCY,
-            frame_storage.selected_task_id.is_some(),
-        );
-        frame_storage.register_keybind(
-            KEYBIND_TASK_RENAME,
-            frame_storage.selected_task_id.is_some(),
-        );
+        frame_storage.register_keybind(KEYBIND_TASK_DELETE, is_task_selected);
+        frame_storage.register_keybind(KEYBIND_TASK_ADD_TAG, is_task_selected);
+        frame_storage.register_keybind(KEYBIND_TASK_ADD_DEPENDENCY, is_task_selected);
+        frame_storage.register_keybind(KEYBIND_TASK_RENAME, is_task_selected);
+        frame_storage.register_keybind(KEYBIND_TASK_EDIT, is_task_selected);
     }
 
     fn render(
@@ -199,7 +186,36 @@ impl Component for TaskList {
             self.index = self.index.clamp(0, tasks.len() - 1);
         }
 
-        if self.modals[self.create_task_modal].is_open() {
+        if self.modals[self.edit_modal].is_open() {
+            if let Some(selected) = self.modals[self.edit_modal].take_selected_keybind() {
+                match selected {
+                    _ if selected == *KEYBIND_TASK_RENAME => {
+                        self.modals[self.rename_task_modal]
+                            .open_with_text(tasks[self.index].title.clone());
+                        return true;
+                    }
+                    _ if selected == *KEYBIND_TASK_DELETE => {
+                        self.modals[self.delete_task_modal].open(true);
+                        return true;
+                    }
+                    _ if selected == *KEYBIND_TASK_ADD_DEPENDENCY => {
+                        self.open_add_dependency_dialog(state, &tasks);
+                        return true;
+                    }
+                    _ if selected == *KEYBIND_TASK_ADD_TAG => {
+                        if !tasks.is_empty() {
+                            // add tag to currently selected task
+                            self.modals[self.new_tag_modal].open();
+                        }
+                        return true;
+                    }
+                    _ => (),
+                }
+            }
+            // always return true because the modal should be blocking input propagation but it
+            // can't since it blocks us from checking the modal result. thus, we block here.
+            true
+        } else if self.modals[self.create_task_modal].is_open() {
             // popup is open
             if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(text) = self.modals[self.create_task_modal].close() {
@@ -311,20 +327,15 @@ impl Component for TaskList {
 
                 true
             } else if KEYBIND_TASK_ADD_DEPENDENCY.is_match(key) {
-                // link to other task
-                let selected = &tasks[self.index];
-                let existing_dependency_ids = state
-                    .database
-                    .get_dependencies(selected.id())
-                    .map(|x| x.id().clone())
-                    .collect::<HashSet<_>>();
-                let candidate_tasks = tasks
-                    .iter()
-                    .filter(|t| t.id() != selected.id())
-                    .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
-                    .map(|w| (w.id().clone(), w.title.clone()))
-                    .collect();
-                self.modals[self.search_box_depend_on].open(candidate_tasks);
+                self.open_add_dependency_dialog(state, &tasks);
+                true
+            } else if KEYBIND_TASK_EDIT.is_match(key) {
+                self.modals[self.edit_modal].open(vec![
+                    KEYBIND_TASK_RENAME.clone(),
+                    KEYBIND_TASK_DELETE.clone(),
+                    KEYBIND_TASK_ADD_DEPENDENCY.clone(),
+                    KEYBIND_TASK_ADD_TAG.clone(),
+                ]);
                 true
             } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
                 match key {
@@ -364,5 +375,24 @@ impl Component for TaskList {
                 false
             }
         }
+    }
+}
+
+impl TaskList {
+    fn open_add_dependency_dialog(&mut self, state: &AppState, tasks: &[Task]) {
+        // link to other task
+        let selected = &tasks[self.index];
+        let existing_dependency_ids = state
+            .database
+            .get_dependencies(selected.id())
+            .map(|x| x.id().clone())
+            .collect::<HashSet<_>>();
+        let candidate_tasks = tasks
+            .iter()
+            .filter(|t| t.id() != selected.id())
+            .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
+            .map(|w| (w.id().clone(), w.title.clone()))
+            .collect();
+        self.modals[self.search_box_depend_on].open(candidate_tasks);
     }
 }

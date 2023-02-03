@@ -13,6 +13,7 @@ pub const KEYBIND_TASK_MARK_DONE: &SimpleKeybind =
     &SimpleKeybind::new(KeyCode::Enter, "Mark as done");
 pub const KEYBIND_TASK_NEW: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Char('n'), "New task");
 pub const KEYBIND_TASK_DELETE: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Char('x'), "Delete");
+pub const KEYBIND_TASK_EDIT: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Char('e'), "Edit");
 pub const KEYBIND_TASK_ADD_TAG: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Char('t'), "Add tag");
 pub const KEYBIND_TASK_ADD_DEPENDENCY: &SimpleKeybind =
     &SimpleKeybind::new(KeyCode::Char('d'), "Add dependency");
@@ -47,10 +48,11 @@ pub trait Keybind {
     fn description(&self) -> Option<&Cow<'static, str>>;
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
 struct KeyCombo(KeyCode, Option<KeyModifiers>);
 
 impl KeyCombo {
-    fn to_string(&self) -> Cow<'static, str> {
+    fn as_string(&self) -> Cow<'static, str> {
         // if shift is pressed, chars will already be the uppercase variant. this simplifies things.
         let mods_without_shift = self
             .1
@@ -73,6 +75,7 @@ impl KeyCombo {
     }
 }
 
+#[derive(Clone, PartialEq, Eq)]
 pub struct SimpleKeybind {
     key_combo: KeyCombo,
     description: Option<Cow<'static, str>>,
@@ -111,7 +114,7 @@ impl Keybind for SimpleKeybind {
     }
 
     fn key_hint(&self) -> Cow<'static, str> {
-        self.key_combo.to_string()
+        self.key_combo.as_string()
     }
 
     fn description(&self) -> Option<&Cow<'static, str>> {
