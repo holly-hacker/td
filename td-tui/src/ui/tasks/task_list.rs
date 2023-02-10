@@ -157,6 +157,7 @@ impl Component for TaskList {
                 // show list navigation if there is at least 1 item to navigate to
                 frame_storage
                     .register_keybind(KEYBIND_CONTROLS_LIST_NAV_EXT, !task_list.is_empty());
+                frame_storage.register_keybind(KEYBIND_TASK_CLOSE_SEARCH, true);
             }
             TaskListFocus::Task(task_index) => {
                 // store currently selected task in frame storage
@@ -176,6 +177,7 @@ impl Component for TaskList {
                 frame_storage.register_keybind(KEYBIND_TASK_ADD_DEPENDENCY, is_task_selected);
                 frame_storage.register_keybind(KEYBIND_TASK_RENAME, is_task_selected);
                 frame_storage.register_keybind(KEYBIND_TASK_EDIT, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_TOGGLE_SEARCH, true);
             }
         }
     }
@@ -250,9 +252,14 @@ impl Component for TaskList {
             TaskListFocus::SearchBar => {
                 if KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) == Some(UpDownExtendedKey::Down) {
                     self.set_focus(TaskListFocus::Task(0));
-                    return true;
+                    true
+                } else if KEYBIND_TASK_CLOSE_SEARCH.is_match(key) {
+                    state.filter_search = false;
+                    self.set_focus(TaskListFocus::Task(0));
+                    true
+                } else {
+                    self.search_bar.process_input(key, state, frame_storage)
                 }
-                self.search_bar.process_input(key, state, frame_storage)
             }
             TaskListFocus::Task(task_index) => {
                 if self.handle_modals(key, state, &tasks, task_index) {
@@ -317,6 +324,15 @@ impl Component for TaskList {
                         KEYBIND_TASK_ADD_DEPENDENCY.clone(),
                         KEYBIND_TASK_ADD_TAG.clone(),
                     ]);
+                    true
+                } else if KEYBIND_TASK_TOGGLE_SEARCH.is_match(key) {
+                    state.filter_search = !state.filter_search;
+
+                    // if we are turning *on* search, focus the search bar
+                    if state.filter_search {
+                        self.set_focus(TaskListFocus::SearchBar);
+                    }
+
                     true
                 } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
                     // handle kb navigation

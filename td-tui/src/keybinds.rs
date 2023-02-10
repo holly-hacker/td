@@ -18,6 +18,10 @@ pub const KEYBIND_TASK_ADD_TAG: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Ch
 pub const KEYBIND_TASK_ADD_DEPENDENCY: &SimpleKeybind =
     &SimpleKeybind::new(KeyCode::Char('d'), "Add dependency");
 pub const KEYBIND_TASK_RENAME: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Char('r'), "Rename");
+pub const KEYBIND_TASK_TOGGLE_SEARCH: &SimpleKeybind =
+    &SimpleKeybind::new(KeyCode::Char('s'), "Toggle search");
+pub const KEYBIND_TASK_CLOSE_SEARCH: &SimpleKeybind =
+    &SimpleKeybind::new(KeyCode::Esc, "Close search");
 
 pub const KEYBIND_TABS_NEXT: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Tab, "Next tab");
 pub const KEYBIND_TABS_PREV: &SimpleKeybind = &SimpleKeybind::new_hidden(KeyCode::BackTab);
