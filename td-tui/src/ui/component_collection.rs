@@ -64,7 +64,7 @@ impl Component for ComponentCollection {
     ) {
         self.components
             .iter()
-            .for_each(|m| m.pre_render(global_state, frame_storage))
+            .for_each(|m| m.pre_render(global_state, frame_storage));
     }
 
     fn render(
@@ -76,7 +76,7 @@ impl Component for ComponentCollection {
     ) {
         self.components
             .iter()
-            .for_each(|m| m.render(frame, area, state, frame_storage))
+            .for_each(|m| m.render(frame, area, state, frame_storage));
     }
 
     fn process_input(

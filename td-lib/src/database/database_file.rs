@@ -20,9 +20,7 @@ impl DatabaseFile {
     pub fn read(path: &Path) -> Result<Self, DatabaseReadError> {
         let file = std::fs::read(path)?;
 
-        let db_info: DatabaseFile = serde_json::from_slice(&file)?;
-
-        Ok(db_info)
+        Ok(serde_json::from_slice(&file)?)
     }
 
     /// Write the database file to disk in json format.

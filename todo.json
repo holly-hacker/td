@@ -250,6 +250,9 @@
         "time_completed": "2023-01-14 11:55:31.3967567 +01:00:00"
       },
       {
+        "dependencies": [
+          "HMpzpjaz"
+        ],
         "id": "sj7FSZwa",
         "title": "Allow filtering using custom search queries (custom syntax)",
         "time_created": "2023-01-14 11:28:42.2167957 +01:00:00",

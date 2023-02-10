@@ -24,6 +24,7 @@ impl<T: Clone> UndoWrapper<T> {
     }
 
     /// Gets a reference to the current state.
+    #[must_use]
     pub fn state(&self) -> &T {
         debug_assert!(!self.states.is_empty());
         debug_assert!(self.states.len() > self.current_index);
@@ -68,12 +69,13 @@ impl<T: Clone> UndoWrapper<T> {
     }
 
     /// Returns how many times the state can be reverted.
+    #[must_use]
     pub fn undo_count(&self) -> usize {
         self.current_index
     }
 
-    /// Forwards the state one stage after calling [Self::undo]. This will only work right before
-    /// an undo, modifying the current state using [Self::modify] will clear the redo queue.
+    /// Forwards the state one stage after calling [`Self::undo`]. This will only work right before
+    /// an undo, modifying the current state using [`Self::modify`] will clear the redo queue.
     pub fn redo(&mut self) -> bool {
         if self.current_index < self.states.len() - 1 {
             self.current_index += 1;
@@ -84,6 +86,7 @@ impl<T: Clone> UndoWrapper<T> {
     }
 
     /// Returns how many times the state can be forwarded.
+    #[must_use]
     pub fn redo_count(&self) -> usize {
         self.states.len() - 1 - self.current_index
     }
@@ -94,7 +97,8 @@ impl<T: Clone> UndoWrapper<T> {
         self.clean_index = Some(self.current_index);
     }
 
-    /// Returns whether the current state is "dirty". See [Self::mark_clean].
+    /// Returns whether the current state is "dirty". See [`Self::mark_clean`].
+    #[must_use]
     pub fn is_dirty(&self) -> bool {
         self.clean_index != Some(self.current_index)
     }

@@ -86,7 +86,7 @@ impl Database {
     }
 
     fn get_node_index(&self, task_id: &TaskId) -> Option<NodeIndex> {
-        self.task_id_to_index.get(task_id).cloned().or_else(|| {
+        self.task_id_to_index.get(task_id).copied().or_else(|| {
             // this fallback check exists in case we add a new node and it isn't in the cache.
             // this check should be removed when insertion of new tasks is managed here.
             for node_index in self.graph.node_indices() {
@@ -102,6 +102,7 @@ impl Database {
 
 impl Task {
     /// Create a new, empty task with the given title.
+    #[must_use]
     pub fn create_now(title: String) -> Self {
         let time_created =
             OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
@@ -116,6 +117,7 @@ impl Task {
     }
 
     /// Gets the internal ID of this task.
+    #[must_use]
     pub fn id(&self) -> &TaskId {
         &self.id
     }

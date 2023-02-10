@@ -40,7 +40,7 @@ impl Component for TabLayout {
         frame_storage: &mut super::FrameLocalStorage,
     ) {
         if let Some(component) = self.get_selected_component() {
-            component.pre_render(global_state, frame_storage)
+            component.pre_render(global_state, frame_storage);
         }
 
         frame_storage.register_keybind(KEYBIND_TABS_NEXT, self.items.len() >= 2);
