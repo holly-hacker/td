@@ -1,4 +1,8 @@
-#![warn(clippy::semicolon_if_nothing_returned, clippy::use_self, clippy::cloned_instead_of_copied)]
+#![warn(
+    clippy::semicolon_if_nothing_returned,
+    clippy::use_self,
+    clippy::cloned_instead_of_copied
+)]
 
 mod keybinds;
 mod ui;

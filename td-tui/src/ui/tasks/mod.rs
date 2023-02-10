@@ -13,6 +13,7 @@ use crate::{keybinds::*, utils::RectExt};
 mod task_info;
 mod task_list;
 mod task_list_settings;
+mod task_search;
 
 pub struct TaskPage {
     list: TaskList,

@@ -246,6 +246,7 @@ impl Keybind for UpDownExtendedKeybind {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum UpDownExtendedKey {
     Up,
     Down,

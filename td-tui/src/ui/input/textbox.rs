@@ -28,6 +28,12 @@ impl TextBoxComponent {
     }
 
     #[must_use]
+    pub fn with_focus(mut self, enabled: bool) -> Self {
+        self.focused = enabled;
+        self
+    }
+
+    #[must_use]
     pub fn with_background(mut self, enabled: bool) -> Self {
         self.has_background = enabled;
         self
@@ -43,6 +49,10 @@ impl TextBoxComponent {
     #[must_use]
     pub fn text(&self) -> &str {
         self.input.value()
+    }
+
+    pub fn set_focus(&mut self, value: bool) {
+        self.focused = value;
     }
 }
 

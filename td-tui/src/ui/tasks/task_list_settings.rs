@@ -15,12 +15,13 @@ pub struct TaskListSettings {
 }
 
 impl TaskListSettings {
-    pub const UI_HEIGHT: u16 = 5;
+    pub const UI_HEIGHT: u16 = Self::SETTING_COUNT as u16 + 2 + 1;
 
-    const SETTING_COUNT: usize = 2;
+    const SETTING_COUNT: usize = 3;
 
     const INDEX_SORT_OLDEST: usize = 0;
     const INDEX_FILTER_COMPLETED: usize = 1;
+    const INDEX_FILTER_SEARCH: usize = 2;
 }
 
 impl Component for TaskListSettings {
@@ -78,6 +79,18 @@ impl Component for TaskListSettings {
             }),
             area_filter.slice_y(1..=1),
         );
+        frame.render_widget(
+            Paragraph::new(format!(
+                " [{}] Text search",
+                if state.filter_search { 'X' } else { ' ' }
+            ))
+            .style(if self.index == Self::INDEX_FILTER_SEARCH {
+                LIST_HIGHLIGHT_STYLE
+            } else {
+                NO_STYLE
+            }),
+            area_filter.slice_y(2..=2),
+        );
     }
 
     fn process_input(
@@ -97,18 +110,22 @@ impl Component for TaskListSettings {
                     true
                 }
             }
-        } else if self.index == Self::INDEX_SORT_OLDEST
-            && KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key)
-        {
-            state.sort_oldest_first = !state.sort_oldest_first;
-            true
-        } else if self.index == Self::INDEX_FILTER_COMPLETED
-            && KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key)
-        {
-            state.filter_completed = !state.filter_completed;
-            true
         } else {
-            false
+            match self.index {
+                Self::INDEX_SORT_OLDEST if KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key) => {
+                    state.sort_oldest_first = !state.sort_oldest_first;
+                    true
+                }
+                Self::INDEX_FILTER_COMPLETED if KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key) => {
+                    state.filter_completed = !state.filter_completed;
+                    true
+                }
+                Self::INDEX_FILTER_SEARCH if KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key) => {
+                    state.filter_search = !state.filter_search;
+                    true
+                }
+                _ => false,
+            }
         }
     }
 }

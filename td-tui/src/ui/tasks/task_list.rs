@@ -14,6 +14,7 @@ use tui::{
     Frame,
 };
 
+use super::task_search::TaskSearchBarComponent;
 use crate::{
     keybinds::*,
     ui::{
@@ -22,10 +23,12 @@ use crate::{
         modal::*,
         AppState, Component, FrameLocalStorage,
     },
+    utils::RectExt,
 };
 
 pub struct TaskList {
-    index: usize,
+    focus: TaskListFocus,
+    search_bar: TaskSearchBarComponent,
     modals: ComponentCollection,
     create_task_modal: CollectionKey<TextInputModal>,
     new_tag_modal: CollectionKey<TextInputModal>,
@@ -35,13 +38,19 @@ pub struct TaskList {
     search_box_depend_on: CollectionKey<ListSearchModal<TaskId>>,
 }
 
+enum TaskListFocus {
+    SearchBar,
+    Task(usize),
+}
+
 impl TaskList {
     const SCROLL_PAGE_UP_DOWN: usize = 32;
 
     pub fn new() -> Self {
         let mut modal_collection = ComponentCollection::default();
         Self {
-            index: 0,
+            focus: TaskListFocus::Task(0),
+            search_bar: TaskSearchBarComponent::default(),
             create_task_modal: modal_collection
                 .insert(TextInputModal::new("Create new task".to_string())),
             new_tag_modal: modal_collection.insert(TextInputModal::new("Add new tag".to_string())),
@@ -70,6 +79,9 @@ impl TaskList {
 
         // filter
         tasks.retain(|x| state.get_task_filter_predicate().eval(x));
+        if state.filter_search {
+            tasks.retain(|t| self.search_bar.filter(t));
+        }
 
         tasks
     }
@@ -120,27 +132,52 @@ impl TaskList {
 
         spans.into()
     }
+
+    fn set_focus(&mut self, value: TaskListFocus) {
+        self.focus = value;
+        match self.focus {
+            TaskListFocus::SearchBar => self.search_bar.set_focus(true),
+            TaskListFocus::Task(_) => self.search_bar.set_focus(false),
+        }
+    }
 }
 
 impl Component for TaskList {
     fn pre_render(&self, global_state: &AppState, frame_storage: &mut FrameLocalStorage) {
-        // store currently selected task in frame storage
-        let task_list = self.get_task_list(global_state);
-        frame_storage.selected_task_id = task_list.get(self.index).map(|x| x.id().clone());
+        match self.focus {
+            TaskListFocus::SearchBar => {
+                // select top-most task if possible. it's better than having none selected
+                let task_list = self.get_task_list(global_state);
+                frame_storage.selected_task_id = task_list.get(0).map(|x| x.id().clone());
 
-        self.modals.pre_render(global_state, frame_storage);
+                // NOTE: there should never be an open modal with the searchbar selected, but this
+                // makes sure that they would work if it happened regardless.
+                self.modals.pre_render(global_state, frame_storage);
 
-        frame_storage.register_keybind(KEYBIND_CONTROLS_LIST_NAV_EXT, task_list.len() >= 2);
+                // show list navigation if there is at least 1 item to navigate to
+                frame_storage
+                    .register_keybind(KEYBIND_CONTROLS_LIST_NAV_EXT, !task_list.is_empty());
+            }
+            TaskListFocus::Task(task_index) => {
+                // store currently selected task in frame storage
+                let task_list = self.get_task_list(global_state);
+                frame_storage.selected_task_id = task_list.get(task_index).map(|x| x.id().clone());
 
-        let is_task_selected = frame_storage.selected_task_id.is_some();
-        frame_storage.register_keybind(KEYBIND_TASK_MARK_STARTED, is_task_selected);
-        frame_storage.register_keybind(KEYBIND_TASK_MARK_DONE, is_task_selected);
-        frame_storage.register_keybind(KEYBIND_TASK_NEW, true);
-        frame_storage.register_keybind(KEYBIND_TASK_DELETE, is_task_selected);
-        frame_storage.register_keybind(KEYBIND_TASK_ADD_TAG, is_task_selected);
-        frame_storage.register_keybind(KEYBIND_TASK_ADD_DEPENDENCY, is_task_selected);
-        frame_storage.register_keybind(KEYBIND_TASK_RENAME, is_task_selected);
-        frame_storage.register_keybind(KEYBIND_TASK_EDIT, is_task_selected);
+                self.modals.pre_render(global_state, frame_storage);
+
+                frame_storage.register_keybind(KEYBIND_CONTROLS_LIST_NAV_EXT, task_list.len() >= 2);
+
+                let is_task_selected = frame_storage.selected_task_id.is_some();
+                frame_storage.register_keybind(KEYBIND_TASK_MARK_STARTED, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_MARK_DONE, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_NEW, true);
+                frame_storage.register_keybind(KEYBIND_TASK_DELETE, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_ADD_TAG, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_ADD_DEPENDENCY, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_RENAME, is_task_selected);
+                frame_storage.register_keybind(KEYBIND_TASK_EDIT, is_task_selected);
+            }
+        }
     }
 
     fn render(
@@ -152,17 +189,37 @@ impl Component for TaskList {
     ) {
         let task_list = self.get_task_list(state);
 
+        let list_area;
+
+        if state.filter_search {
+            list_area = area.skip_y(1);
+
+            let search_area = area.take_y(1);
+            self.search_bar
+                .render(frame, search_area, state, frame_storage);
+        } else {
+            list_area = area;
+        }
+
         // render the list
         let list_items = task_list
             .iter()
             .map(|t| ListItem::new(self.task_to_span(state, t)))
             .collect::<Vec<_>>();
         let list = List::new(list_items)
-            .highlight_style(LIST_HIGHLIGHT_STYLE)
+            .highlight_style(if matches!(self.focus, TaskListFocus::Task(_)) {
+                LIST_HIGHLIGHT_STYLE
+            } else {
+                LIST_HIGHLIGHT_STYLE_DISABLED
+            })
             .style(LIST_STYLE);
         let mut list_state = ListState::default();
-        list_state.select((!task_list.is_empty()).then_some(self.index));
-        frame.render_stateful_widget(list, area, &mut list_state);
+        if let TaskListFocus::Task(task_index) = self.focus {
+            list_state.select((!task_list.is_empty()).then_some(task_index));
+        } else {
+            list_state.select((!task_list.is_empty()).then_some(0));
+        }
+        frame.render_stateful_widget(list, list_area, &mut list_state);
 
         // if needed, render popups
         self.modals
@@ -182,16 +239,150 @@ impl Component for TaskList {
 
         let tasks = self.get_task_list(state);
 
-        if !tasks.is_empty() {
-            self.index = self.index.clamp(0, tasks.len() - 1);
+        // safety checks
+        if let TaskListFocus::Task(task_index) = &mut self.focus {
+            if !tasks.is_empty() {
+                *task_index = (*task_index).clamp(0, tasks.len() - 1);
+            }
         }
 
+        match self.focus {
+            TaskListFocus::SearchBar => {
+                if KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) == Some(UpDownExtendedKey::Down) {
+                    self.set_focus(TaskListFocus::Task(0));
+                    return true;
+                }
+                self.search_bar.process_input(key, state, frame_storage)
+            }
+            TaskListFocus::Task(task_index) => {
+                if self.handle_modals(key, state, &tasks, task_index) {
+                    return true;
+                }
+
+                // take our own input
+                if KEYBIND_TASK_MARK_STARTED.is_match(key) {
+                    state.database.modify(|db| {
+                        let task = &mut db[tasks[task_index].id()];
+                        if task.time_started.is_none() {
+                            task.time_started = Some(
+                                OffsetDateTime::now_local()
+                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                            );
+                        } else {
+                            task.time_started = None;
+                        }
+                    });
+
+                    true
+                } else if KEYBIND_TASK_MARK_DONE.is_match(key) {
+                    state.database.modify(|db| {
+                        let task = &mut db[tasks[task_index].id()];
+                        if task.time_completed.is_none() {
+                            task.time_completed = Some(
+                                OffsetDateTime::now_local()
+                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                            );
+                        } else {
+                            task.time_completed = None;
+                        }
+                    });
+
+                    true
+                } else if KEYBIND_TASK_NEW.is_match(key) {
+                    self.modals[self.create_task_modal].open();
+                    true
+                } else if KEYBIND_TASK_RENAME.is_match(key) {
+                    self.modals[self.rename_task_modal]
+                        .open_with_text(tasks[task_index].title.clone());
+                    true
+                } else if KEYBIND_TASK_DELETE.is_match(key) {
+                    self.modals[self.delete_task_modal].open(true);
+
+                    true
+                } else if KEYBIND_TASK_ADD_TAG.is_match(key) {
+                    if !tasks.is_empty() {
+                        // add tag to currently selected task
+                        self.modals[self.new_tag_modal].open();
+                    }
+
+                    true
+                } else if KEYBIND_TASK_ADD_DEPENDENCY.is_match(key) {
+                    let modal = &mut self.modals[self.search_box_depend_on];
+                    Self::open_add_dependency_dialog(modal, state, task_index, &tasks);
+                    true
+                } else if KEYBIND_TASK_EDIT.is_match(key) {
+                    self.modals[self.edit_modal].open(vec![
+                        KEYBIND_TASK_RENAME.clone(),
+                        KEYBIND_TASK_DELETE.clone(),
+                        KEYBIND_TASK_ADD_DEPENDENCY.clone(),
+                        KEYBIND_TASK_ADD_TAG.clone(),
+                    ]);
+                    true
+                } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
+                    // handle kb navigation
+
+                    if key == UpDownExtendedKey::Up && task_index == 0 && state.filter_search {
+                        self.set_focus(TaskListFocus::SearchBar);
+                        return true;
+                    }
+
+                    let TaskListFocus::Task(task_index) = &mut self.focus else {unreachable!();};
+
+                    match key {
+                        UpDownExtendedKey::Up => {
+                            *task_index = task_index.saturating_sub(1);
+                            true
+                        }
+                        UpDownExtendedKey::Down => {
+                            if !tasks.is_empty() && *task_index != tasks.len() - 1 {
+                                *task_index += 1;
+                            }
+                            true
+                        }
+                        UpDownExtendedKey::PageUp => {
+                            *task_index = task_index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
+                            true
+                        }
+                        UpDownExtendedKey::PageDown => {
+                            if !tasks.is_empty() && *task_index != tasks.len() - 1 {
+                                *task_index += Self::SCROLL_PAGE_UP_DOWN;
+                                *task_index = (*task_index).min(tasks.len() - 1);
+                            }
+                            true
+                        }
+                        UpDownExtendedKey::Home => {
+                            *task_index = 0;
+                            true
+                        }
+                        UpDownExtendedKey::End => {
+                            if !tasks.is_empty() && *task_index != tasks.len() - 1 {
+                                *task_index = tasks.len() - 1;
+                            }
+                            true
+                        }
+                    }
+                } else {
+                    false
+                }
+            }
+        }
+    }
+}
+
+impl TaskList {
+    fn handle_modals(
+        &mut self,
+        key: KeyEvent,
+        state: &mut AppState,
+        tasks: &[Task],
+        task_index: usize,
+    ) -> bool {
         if self.modals[self.edit_modal].is_open() {
             if let Some(selected) = self.modals[self.edit_modal].take_selected_keybind() {
                 match selected {
                     _ if selected == *KEYBIND_TASK_RENAME => {
                         self.modals[self.rename_task_modal]
-                            .open_with_text(tasks[self.index].title.clone());
+                            .open_with_text(tasks[task_index].title.clone());
                         return true;
                     }
                     _ if selected == *KEYBIND_TASK_DELETE => {
@@ -199,7 +390,8 @@ impl Component for TaskList {
                         return true;
                     }
                     _ if selected == *KEYBIND_TASK_ADD_DEPENDENCY => {
-                        self.open_add_dependency_dialog(state, &tasks);
+                        let modal = &mut self.modals[self.search_box_depend_on];
+                        Self::open_add_dependency_dialog(modal, state, task_index, tasks);
                         return true;
                     }
                     _ if selected == *KEYBIND_TASK_ADD_TAG => {
@@ -232,7 +424,7 @@ impl Component for TaskList {
             if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(text) = self.modals[self.rename_task_modal].close() {
                     state.database.modify(|db| {
-                        let selected_task = &mut db[tasks[self.index].id()];
+                        let selected_task = &mut db[tasks[task_index].id()];
                         selected_task.title = text;
                     });
                 }
@@ -247,7 +439,7 @@ impl Component for TaskList {
                     // delete
                     state
                         .database
-                        .modify(|x| x.remove_task(tasks[self.index].id()));
+                        .modify(|x| x.remove_task(tasks[task_index].id()));
                 }
                 true
             } else {
@@ -258,7 +450,7 @@ impl Component for TaskList {
             if KEYBIND_MODAL_SUBMIT.is_match(key) {
                 if let Some(text) = self.modals[self.new_tag_modal].close() {
                     state.database.modify(|db| {
-                        let selected_task = &mut db[tasks[self.index].id()];
+                        let selected_task = &mut db[tasks[task_index].id()];
                         selected_task.tags.push(text);
                     });
                 }
@@ -272,7 +464,7 @@ impl Component for TaskList {
                 if let Some(selected_task_id) = self.modals[self.search_box_depend_on].close() {
                     state
                         .database
-                        .modify(|x| x.add_dependency(tasks[self.index].id(), &selected_task_id));
+                        .modify(|x| x.add_dependency(tasks[task_index].id(), &selected_task_id));
                 }
 
                 true
@@ -280,108 +472,18 @@ impl Component for TaskList {
                 false
             }
         } else {
-            // take our own input
-            if KEYBIND_TASK_MARK_STARTED.is_match(key) {
-                state.database.modify(|db| {
-                    let task = &mut db[tasks[self.index].id()];
-                    if task.time_started.is_none() {
-                        task.time_started = Some(
-                            OffsetDateTime::now_local()
-                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                        );
-                    } else {
-                        task.time_started = None;
-                    }
-                });
-
-                true
-            } else if KEYBIND_TASK_MARK_DONE.is_match(key) {
-                state.database.modify(|db| {
-                    let task = &mut db[tasks[self.index].id()];
-                    if task.time_completed.is_none() {
-                        task.time_completed = Some(
-                            OffsetDateTime::now_local()
-                                .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                        );
-                    } else {
-                        task.time_completed = None;
-                    }
-                });
-
-                true
-            } else if KEYBIND_TASK_NEW.is_match(key) {
-                self.modals[self.create_task_modal].open();
-                true
-            } else if KEYBIND_TASK_RENAME.is_match(key) {
-                self.modals[self.rename_task_modal].open_with_text(tasks[self.index].title.clone());
-                true
-            } else if KEYBIND_TASK_DELETE.is_match(key) {
-                self.modals[self.delete_task_modal].open(true);
-
-                true
-            } else if KEYBIND_TASK_ADD_TAG.is_match(key) {
-                if !tasks.is_empty() {
-                    // add tag to currently selected task
-                    self.modals[self.new_tag_modal].open();
-                }
-
-                true
-            } else if KEYBIND_TASK_ADD_DEPENDENCY.is_match(key) {
-                self.open_add_dependency_dialog(state, &tasks);
-                true
-            } else if KEYBIND_TASK_EDIT.is_match(key) {
-                self.modals[self.edit_modal].open(vec![
-                    KEYBIND_TASK_RENAME.clone(),
-                    KEYBIND_TASK_DELETE.clone(),
-                    KEYBIND_TASK_ADD_DEPENDENCY.clone(),
-                    KEYBIND_TASK_ADD_TAG.clone(),
-                ]);
-                true
-            } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
-                match key {
-                    UpDownExtendedKey::Up => {
-                        self.index = self.index.saturating_sub(1);
-                        true
-                    }
-                    UpDownExtendedKey::Down => {
-                        if !tasks.is_empty() && self.index != tasks.len() - 1 {
-                            self.index += 1;
-                        }
-                        true
-                    }
-                    UpDownExtendedKey::PageUp => {
-                        self.index = self.index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
-                        true
-                    }
-                    UpDownExtendedKey::PageDown => {
-                        if !tasks.is_empty() && self.index != tasks.len() - 1 {
-                            self.index += Self::SCROLL_PAGE_UP_DOWN;
-                            self.index = self.index.min(tasks.len() - 1);
-                        }
-                        true
-                    }
-                    UpDownExtendedKey::Home => {
-                        self.index = 0;
-                        true
-                    }
-                    UpDownExtendedKey::End => {
-                        if !tasks.is_empty() && self.index != tasks.len() - 1 {
-                            self.index = tasks.len() - 1;
-                        }
-                        true
-                    }
-                }
-            } else {
-                false
-            }
+            false
         }
     }
-}
 
-impl TaskList {
-    fn open_add_dependency_dialog(&mut self, state: &AppState, tasks: &[Task]) {
+    fn open_add_dependency_dialog(
+        modal: &mut ListSearchModal<TaskId>,
+        state: &AppState,
+        task_index: usize,
+        tasks: &[Task],
+    ) {
         // link to other task
-        let selected = &tasks[self.index];
+        let selected = &tasks[task_index];
         let existing_dependency_ids = state
             .database
             .get_dependencies(selected.id())
@@ -393,6 +495,6 @@ impl TaskList {
             .filter(|candidate| !existing_dependency_ids.contains(candidate.id()))
             .map(|w| (w.id().clone(), w.title.clone()))
             .collect();
-        self.modals[self.search_box_depend_on].open(candidate_tasks);
+        modal.open(candidate_tasks);
     }
 }

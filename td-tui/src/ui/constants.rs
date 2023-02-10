@@ -111,6 +111,12 @@ pub const LIST_HIGHLIGHT_STYLE: Style = Style {
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
 };
+pub const LIST_HIGHLIGHT_STYLE_DISABLED: Style = Style {
+    fg: Some(Color::Black),
+    bg: Some(Color::DarkGray),
+    add_modifier: Modifier::BOLD,
+    sub_modifier: Modifier::empty(),
+};
 
 /// The style for unselected tabs
 pub const TAB_STYLE: Style = Style {

@@ -39,6 +39,7 @@ pub struct AppState {
 
     pub sort_oldest_first: bool,
     pub filter_completed: bool,
+    pub filter_search: bool,
 }
 
 impl AppState {
@@ -62,6 +63,7 @@ impl AppState {
             should_exit: false,
             sort_oldest_first: false,
             filter_completed: true,
+            filter_search: false,
         })
     }
 
