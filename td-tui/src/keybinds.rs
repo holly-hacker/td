@@ -19,7 +19,7 @@ pub const KEYBIND_TASK_ADD_DEPENDENCY: &SimpleKeybind =
     &SimpleKeybind::new(KeyCode::Char('d'), "Add dependency");
 pub const KEYBIND_TASK_RENAME: &SimpleKeybind = &SimpleKeybind::new(KeyCode::Char('r'), "Rename");
 pub const KEYBIND_TASK_TOGGLE_SEARCH: &SimpleKeybind =
-    &SimpleKeybind::new(KeyCode::Char('s'), "Toggle search");
+    &SimpleKeybind::new_mod(KeyCode::Char('s'), KeyModifiers::NONE, "Toggle search");
 pub const KEYBIND_TASK_CLOSE_SEARCH: &SimpleKeybind =
     &SimpleKeybind::new(KeyCode::Esc, "Close search");
 
