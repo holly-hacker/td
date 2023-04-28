@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error, io::Stdout, path::PathBuf};
+use std::{borrow::Cow, collections::HashSet, error::Error, io::Stdout, path::PathBuf};
 
 use crossterm::event::{self, Event, KeyEvent};
 use downcast_rs::{impl_downcast, Downcast};
@@ -18,7 +18,7 @@ use self::{
 };
 use crate::{
     keybinds::*,
-    utils::{wrap_spans, RectExt},
+    utils::{wrap_spans, MapPredicate, RectExt},
 };
 
 mod component_collection;
@@ -39,6 +39,7 @@ pub struct AppState {
 
     pub sort_oldest_first: bool,
     pub filter_completed: bool,
+    pub filter_unactionable: bool,
     pub filter_search: bool,
 }
 
@@ -63,6 +64,7 @@ impl AppState {
             should_exit: false,
             sort_oldest_first: false,
             filter_completed: true,
+            filter_unactionable: false,
             filter_search: false,
         })
     }
@@ -110,6 +112,27 @@ impl AppState {
             predicate = predicate
                 .and(predicate::function(|x: &Task| x.time_completed.is_none()))
                 .boxed();
+        }
+
+        if self.filter_unactionable {
+            let tasks_with_uncompleted_dependencies = self
+                .database
+                .get_all_tasks()
+                .filter(|t| {
+                    self.database
+                        .get_dependencies(t.id())
+                        .any(|dep| dep.time_completed.is_none())
+                })
+                .map(|t| t.id().clone())
+                .collect::<HashSet<_>>();
+
+            let has_uncompleted_dependencies =
+                predicate::in_hash(tasks_with_uncompleted_dependencies);
+
+            let has_uncompleted_dependencies =
+                MapPredicate::new(has_uncompleted_dependencies, |task: &Task| task.id());
+
+            predicate = predicate.and(has_uncompleted_dependencies.not()).boxed();
         }
 
         predicate

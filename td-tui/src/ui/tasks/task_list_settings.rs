@@ -17,11 +17,12 @@ pub struct TaskListSettings {
 impl TaskListSettings {
     pub const UI_HEIGHT: u16 = Self::SETTING_COUNT as u16 + 2 + 1;
 
-    const SETTING_COUNT: usize = 3;
+    const SETTING_COUNT: usize = 4;
 
     const INDEX_SORT_OLDEST: usize = 0;
     const INDEX_FILTER_COMPLETED: usize = 1;
-    const INDEX_FILTER_SEARCH: usize = 2;
+    const INDEX_FILTER_UNACTIONABLE: usize = 2;
+    const INDEX_FILTER_SEARCH: usize = 3;
 }
 
 impl Component for TaskListSettings {
@@ -46,6 +47,7 @@ impl Component for TaskListSettings {
     ) {
         let (area_sorting, area_filter) = area.split_y(3);
 
+        // Sorting
         frame.render_widget(
             Paragraph::new("Sorting:").style(SETTINGS_HEADER),
             area_sorting.slice_y(0..=0).take_x("Sorting:".len() as u16),
@@ -63,6 +65,7 @@ impl Component for TaskListSettings {
             area_sorting.slice_y(1..=1),
         );
 
+        // Filter
         frame.render_widget(
             Paragraph::new("Filter:").style(SETTINGS_HEADER),
             area_filter.slice_y(0..=0).take_x("Filter:".len() as u16),
@@ -81,6 +84,18 @@ impl Component for TaskListSettings {
         );
         frame.render_widget(
             Paragraph::new(format!(
+                " [{}] Hide unactionable (unfinished dependencies)",
+                if state.filter_unactionable { 'X' } else { ' ' }
+            ))
+            .style(if self.index == Self::INDEX_FILTER_UNACTIONABLE {
+                LIST_HIGHLIGHT_STYLE
+            } else {
+                NO_STYLE
+            }),
+            area_filter.slice_y(2..=2),
+        );
+        frame.render_widget(
+            Paragraph::new(format!(
                 " [{}] Text search",
                 if state.filter_search { 'X' } else { ' ' }
             ))
@@ -89,7 +104,7 @@ impl Component for TaskListSettings {
             } else {
                 NO_STYLE
             }),
-            area_filter.slice_y(2..=2),
+            area_filter.slice_y(3..=3),
         );
     }
 
@@ -118,6 +133,12 @@ impl Component for TaskListSettings {
                 }
                 Self::INDEX_FILTER_COMPLETED if KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key) => {
                     state.filter_completed = !state.filter_completed;
+                    true
+                }
+                Self::INDEX_FILTER_UNACTIONABLE
+                    if KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key) =>
+                {
+                    state.filter_unactionable = !state.filter_unactionable;
                     true
                 }
                 Self::INDEX_FILTER_SEARCH if KEYBIND_CONTROLS_CHECKBOX_TOGGLE.is_match(key) => {

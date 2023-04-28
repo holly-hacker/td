@@ -1,6 +1,11 @@
-use std::ops::{Bound, RangeBounds};
+use std::{
+    fmt::Display,
+    marker::PhantomData,
+    ops::{Bound, RangeBounds},
+};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use predicates::{reflection::PredicateReflection, Predicate};
 use tui::{
     layout::Rect,
     text::{Span, Spans},
@@ -183,6 +188,63 @@ pub fn process_textbox_input(key: &KeyEvent) -> Option<InputRequest> {
 
         KeyCode::Char(c) => Some(InputRequest::InsertChar(c)),
         _ => None,
+    }
+}
+
+/// A predicate to adapt another one by mapping its input.
+///
+/// See also https://github.com/assert-rs/predicates-rs/issues/142
+pub struct MapPredicate<M, Item, Input, F>
+where
+    M: Predicate<Item>,
+    F: Fn(&Input) -> &Item,
+{
+    inner: M,
+    map_fn: F,
+    _phantom_item: PhantomData<Item>,
+    _phantom_input: PhantomData<Input>,
+}
+
+impl<M, Item, Input, F> MapPredicate<M, Item, Input, F>
+where
+    M: Predicate<Item>,
+    F: Fn(&Input) -> &Item,
+{
+    pub fn new(inner: M, map_fn: F) -> Self {
+        Self {
+            inner,
+            map_fn,
+            _phantom_item: PhantomData,
+            _phantom_input: PhantomData,
+        }
+    }
+}
+
+impl<M, Item, Input, F> Display for MapPredicate<M, Item, Input, F>
+where
+    M: Predicate<Item>,
+    F: Fn(&Input) -> &Item,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "MapPredicate")
+    }
+}
+
+impl<M, Item, Input, F> PredicateReflection for MapPredicate<M, Item, Input, F>
+where
+    M: Predicate<Item>,
+    F: Fn(&Input) -> &Item,
+{
+}
+
+impl<M, Item, Input, F> Predicate<Input> for MapPredicate<M, Item, Input, F>
+where
+    M: Predicate<Item>,
+    F: Fn(&Input) -> &Item,
+{
+    fn eval(&self, variable: &Input) -> bool {
+        let mapped = (self.map_fn)(variable);
+        self.inner.eval(mapped)
     }
 }
 
