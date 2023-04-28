@@ -47,6 +47,15 @@ impl Component for TaskListSettings {
     ) {
         let (area_sorting, area_filter) = area.split_y(3);
 
+        let checkbox = |b: bool| if b { 'x' } else { ' ' };
+        let list_style = |i: usize| {
+            if self.index == i {
+                LIST_HIGHLIGHT_STYLE
+            } else {
+                NO_STYLE
+            }
+        };
+
         // Sorting
         frame.render_widget(
             Paragraph::new("Sorting:").style(SETTINGS_HEADER),
@@ -55,13 +64,9 @@ impl Component for TaskListSettings {
         frame.render_widget(
             Paragraph::new(format!(
                 " [{}] Show oldest first",
-                if state.sort_oldest_first { 'X' } else { ' ' }
+                checkbox(state.sort_oldest_first)
             ))
-            .style(if self.index == Self::INDEX_SORT_OLDEST {
-                LIST_HIGHLIGHT_STYLE
-            } else {
-                NO_STYLE
-            }),
+            .style(list_style(Self::INDEX_SORT_OLDEST)),
             area_sorting.slice_y(1..=1),
         );
 
@@ -73,37 +78,22 @@ impl Component for TaskListSettings {
         frame.render_widget(
             Paragraph::new(format!(
                 " [{}] Hide completed",
-                if state.filter_completed { 'X' } else { ' ' }
+                checkbox(state.filter_completed)
             ))
-            .style(if self.index == Self::INDEX_FILTER_COMPLETED {
-                LIST_HIGHLIGHT_STYLE
-            } else {
-                NO_STYLE
-            }),
+            .style(list_style(Self::INDEX_FILTER_COMPLETED)),
             area_filter.slice_y(1..=1),
         );
         frame.render_widget(
             Paragraph::new(format!(
                 " [{}] Hide unactionable (unfinished dependencies)",
-                if state.filter_unactionable { 'X' } else { ' ' }
+                checkbox(state.filter_unactionable)
             ))
-            .style(if self.index == Self::INDEX_FILTER_UNACTIONABLE {
-                LIST_HIGHLIGHT_STYLE
-            } else {
-                NO_STYLE
-            }),
+            .style(list_style(Self::INDEX_FILTER_UNACTIONABLE)),
             area_filter.slice_y(2..=2),
         );
         frame.render_widget(
-            Paragraph::new(format!(
-                " [{}] Text search",
-                if state.filter_search { 'X' } else { ' ' }
-            ))
-            .style(if self.index == Self::INDEX_FILTER_SEARCH {
-                LIST_HIGHLIGHT_STYLE
-            } else {
-                NO_STYLE
-            }),
+            Paragraph::new(format!(" [{}] Text search", checkbox(state.filter_search)))
+                .style(list_style(Self::INDEX_FILTER_SEARCH)),
             area_filter.slice_y(3..=3),
         );
     }
