@@ -8,9 +8,9 @@ name = "td"
 path = "src/main.rs"
 
 [dependencies]
-crossterm = "0.25"
+crossterm = "0.26"
 downcast-rs = "1.2"
-predicates = { version = "2.1", default-features = false }
+predicates = { version = "3", default-features = false }
 td-lib = { path = "../td-lib" }
 td-util = { path = "../td-util" }
 textwrap = { version = "0.16", default-features = false }
