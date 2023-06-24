@@ -1,5 +1,5 @@
 use crossterm::event::KeyCode;
-use tui::{symbols, text::Spans, widgets::Tabs};
+use ratatui::{symbols, text::Line, widgets::Tabs};
 
 use super::{
     constants::{TAB_HIGHLIGHT_STYLE, TAB_STYLE},
@@ -49,8 +49,8 @@ impl Component for TabLayout {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,
     ) {
@@ -64,7 +64,7 @@ impl Component for TabLayout {
             .iter()
             .enumerate()
             .map(|(i, v)| format!("{v} [{}]", i + 1))
-            .map(Spans::from)
+            .map(Line::from)
             .collect();
         let tabs = Tabs::new(titles)
             .select(self.index)

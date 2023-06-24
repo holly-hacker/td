@@ -1,4 +1,4 @@
-use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState};
+use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState};
 
 use crate::{
     keybinds::*,
@@ -76,8 +76,8 @@ impl<TKey: Eq + Clone + 'static> Component for ListSearchModal<TKey> {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &crate::ui::AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
     ) {

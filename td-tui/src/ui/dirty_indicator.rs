@@ -1,4 +1,4 @@
-use tui::{
+use ratatui::{
     style::{Color, Modifier, Style},
     text::Span,
     widgets::Paragraph,
@@ -11,8 +11,8 @@ pub struct DirtyIndicator;
 impl Component for DirtyIndicator {
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &super::AppState,
         _frame_storage: &super::FrameLocalStorage,
     ) {

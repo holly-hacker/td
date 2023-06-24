@@ -1,4 +1,4 @@
-use tui::style::{Color, Modifier, Style};
+use ratatui::style::{Color, Modifier, Style};
 
 /// The minimum width a modal window can be
 pub const MIN_MODAL_WIDTH: u16 = 32;

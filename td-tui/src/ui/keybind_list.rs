@@ -1,4 +1,4 @@
-use tui::{symbols, text::Span, widgets::Paragraph};
+use ratatui::{symbols, text::Span, widgets::Paragraph};
 
 use super::{
     constants::{
@@ -48,8 +48,8 @@ impl KeybindList {
 impl Component for KeybindList {
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         _state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,
     ) {

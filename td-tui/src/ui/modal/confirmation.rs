@@ -1,6 +1,6 @@
-use tui::{
+use ratatui::{
     layout::Alignment,
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
 };
 
@@ -62,8 +62,8 @@ impl Component for ConfirmationModal {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         _state: &crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,
     ) {
@@ -76,7 +76,7 @@ impl Component for ConfirmationModal {
 
         // create paragraph for yes/no selection
         const BUTTONS_LEN: usize = " <YES>  <NO>  ".len();
-        let buttons = Paragraph::new(Spans::from(vec![
+        let buttons = Paragraph::new(Line::from(vec![
             Span::raw(" "),
             Span::styled("<YES>", if selected_value { TEXT_INVERTED } else { TEXT }),
             Span::raw("  "),
@@ -93,7 +93,7 @@ impl Component for ConfirmationModal {
         // wrap the text inside the inner width
         let wrapped_text = wrap_text(&self.text, inner_width)
             .into_iter()
-            .map(|str| Spans::from(Span::from(str)))
+            .map(|str| Line::from(Span::from(str)))
             .collect::<Vec<_>>();
         let inner_height = wrapped_text.len() as u16 + 2;
         let block_height = inner_height + 2;

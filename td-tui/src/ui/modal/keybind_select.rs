@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
-use tui::{
-    text::{Span, Spans},
+use ratatui::{
+    text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
 };
 
@@ -65,8 +65,8 @@ impl Component for KeybindSelectModal {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         _state: &crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,
     ) {
@@ -76,10 +76,10 @@ impl Component for KeybindSelectModal {
             .title(self.title.clone())
             .borders(Borders::ALL);
 
-        let spans = keybinds
+        let line = keybinds
             .iter()
             .map(|k| {
-                Spans::from(vec![
+                Line::from(vec![
                     Span::raw("["),
                     Span::styled(k.key_hint(), KEYBINDS_CHAR_ACTIVE),
                     Span::raw("] "),
@@ -88,15 +88,15 @@ impl Component for KeybindSelectModal {
             })
             .collect::<Vec<_>>();
 
-        let inner_width = (spans
+        let inner_width = (line
             .iter()
             .map(|x| x.width())
             .max()
             .unwrap_or_default()
             .max(self.title.len())) as u16;
-        let inner_height = spans.len() as u16;
+        let inner_height = line.len() as u16;
 
-        let paragraph = Paragraph::new(spans);
+        let paragraph = Paragraph::new(line);
 
         let block_area = area.center_rect(inner_width + 2, inner_height + 2);
         let block_area_inner = block.inner(block_area);

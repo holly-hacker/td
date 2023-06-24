@@ -1,5 +1,5 @@
-use tui::{
-    text::{Span, Spans},
+use ratatui::{
+    text::{Line, Span},
     widgets::Paragraph,
 };
 use tui_input::Input;
@@ -79,15 +79,15 @@ impl Default for MultilineTextBoxComponent {
 impl Component for MultilineTextBoxComponent {
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         _state: &crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,
     ) {
         let text_wrapped = self.text_wrapped(area.width);
         let wrapped = text_wrapped
             .iter()
-            .map(|string| Spans::from(Span::from(string.as_str())))
+            .map(|string| Line::from(Span::from(string.as_str())))
             .collect::<Vec<_>>();
         let paragraph = Paragraph::new(wrapped).style(if self.has_background {
             TEXTBOX_STYLE_BG

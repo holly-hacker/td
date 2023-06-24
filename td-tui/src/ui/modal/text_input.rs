@@ -1,7 +1,7 @@
 use std::io::Stdout;
 
 use crossterm::event::KeyEvent;
-use tui::{
+use ratatui::{
     backend::CrosstermBackend,
     layout::Rect,
     widgets::{Block, Borders, Clear},

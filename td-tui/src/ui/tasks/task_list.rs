@@ -2,16 +2,16 @@ use std::{collections::HashSet, io::Stdout};
 
 use crossterm::event::KeyEvent;
 use predicates::prelude::*;
+use ratatui::{
+    backend::CrosstermBackend,
+    layout::Rect,
+    text::{Line, Span},
+    widgets::{List, ListItem, ListState},
+    Frame,
+};
 use td_lib::{
     database::{Task, TaskId},
     time::OffsetDateTime,
-};
-use tui::{
-    backend::CrosstermBackend,
-    layout::Rect,
-    text::{Span, Spans},
-    widgets::{List, ListItem, ListState},
-    Frame,
 };
 
 use super::task_search::TaskSearchBarComponent;
@@ -86,7 +86,7 @@ impl TaskList {
         tasks
     }
 
-    fn task_to_span(&self, state: &AppState, task: &Task) -> Spans {
+    fn task_to_span(&self, state: &AppState, task: &Task) -> Line {
         let mut spans = vec![];
 
         let dependents_count = state.database.get_inverse_dependencies(task.id()).count();

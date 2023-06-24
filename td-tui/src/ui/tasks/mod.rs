@@ -1,4 +1,4 @@
-use tui::{
+use ratatui::{
     layout::{Constraint, Direction, Layout},
     widgets::{Block, BorderType, Borders},
 };
@@ -49,8 +49,8 @@ impl Component for TaskPage {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,
     ) {

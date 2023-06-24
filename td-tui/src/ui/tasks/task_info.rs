@@ -1,8 +1,8 @@
-use td_lib::time::{format_description, UtcOffset};
-use tui::{
-    text::{Span, Spans},
+use ratatui::{
+    text::{Line, Span},
     widgets::Paragraph,
 };
+use td_lib::time::{format_description, UtcOffset};
 
 use crate::ui::{
     constants::{BOLD, COMPLETED_TASK},
@@ -14,8 +14,8 @@ pub struct TaskInfoDisplay;
 impl Component for TaskInfoDisplay {
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &AppState,
         frame_storage: &FrameLocalStorage,
     ) {
@@ -35,8 +35,8 @@ impl Component for TaskInfoDisplay {
 
         // show useful info
         let mut spans = vec![
-            Spans::from(vec![Span::styled("Name: ", BOLD), Span::raw(&task.title)]),
-            Spans::from(vec![
+            Line::from(vec![Span::styled("Name: ", BOLD), Span::raw(&task.title)]),
+            Line::from(vec![
                 Span::styled("Created: ", BOLD),
                 Span::raw(time_local.format(&date_format).unwrap()),
             ]),
@@ -45,7 +45,7 @@ impl Component for TaskInfoDisplay {
         if let Some(started_at) = &task.time_started {
             let time_local =
                 started_at.to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
-            spans.push(Spans::from(vec![
+            spans.push(Line::from(vec![
                 Span::styled("Started: ", BOLD),
                 Span::raw(time_local.format(&date_format).unwrap()),
             ]));
@@ -54,7 +54,7 @@ impl Component for TaskInfoDisplay {
         if let Some(completed_at) = &task.time_completed {
             let time_local =
                 completed_at.to_offset(UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC));
-            spans.push(Spans::from(vec![
+            spans.push(Line::from(vec![
                 Span::styled("Completed: ", BOLD),
                 Span::raw(time_local.format(&date_format).unwrap()),
             ]));
@@ -62,12 +62,12 @@ impl Component for TaskInfoDisplay {
 
         // add tags
         if !task.tags.is_empty() {
-            spans.extend([Spans::default(), Spans::from(Span::styled("Tags:", BOLD))]);
+            spans.extend([Line::default(), Line::from(Span::styled("Tags:", BOLD))]);
 
             spans.extend(
                 task.tags
                     .iter()
-                    .map(|tag| Spans::from(vec![Span::raw("- "), Span::raw(tag)])),
+                    .map(|tag| Line::from(vec![Span::raw("- "), Span::raw(tag)])),
             );
         }
 
@@ -75,12 +75,12 @@ impl Component for TaskInfoDisplay {
         let mut dependencies = state.database.get_dependencies(&task_id).peekable();
         if dependencies.peek().is_some() {
             spans.extend([
-                Spans::default(),
-                Spans::from(Span::styled("Depends on:", BOLD)),
+                Line::default(),
+                Line::from(Span::styled("Depends on:", BOLD)),
             ]);
 
             spans.extend(dependencies.map(|task| {
-                Spans::from(vec![
+                Line::from(vec![
                     Span::raw("- "),
                     if task.time_completed.is_some() {
                         Span::styled(&task.title, COMPLETED_TASK)
@@ -95,12 +95,12 @@ impl Component for TaskInfoDisplay {
         let mut dependents = state.database.get_inverse_dependencies(&task_id).peekable();
         if dependents.peek().is_some() {
             spans.extend([
-                Spans::default(),
-                Spans::from(Span::styled("Depended on by:", BOLD)),
+                Line::default(),
+                Line::from(Span::styled("Depended on by:", BOLD)),
             ]);
 
             spans.extend(dependents.map(|task| {
-                Spans::from(vec![
+                Line::from(vec![
                     Span::raw("- "),
                     if task.time_completed.is_some() {
                         Span::styled(&task.title, COMPLETED_TASK)

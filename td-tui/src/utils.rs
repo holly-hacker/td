@@ -6,9 +6,9 @@ use std::{
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use predicates::{reflection::PredicateReflection, Predicate};
-use tui::{
+use ratatui::{
     layout::Rect,
-    text::{Span, Spans},
+    text::{Line, Span},
 };
 use tui_input::InputRequest;
 
@@ -151,21 +151,21 @@ pub fn wrap_text(text: &str, width: u16) -> Vec<String> {
 pub fn wrap_spans<'span>(
     spans: impl IntoIterator<Item = Span<'span>>,
     width: u16,
-) -> Vec<Spans<'span>> {
+) -> Vec<Line<'span>> {
     let mut current_width = 0;
 
-    let mut ret = vec![Spans::default()];
+    let mut ret = vec![Line::default()];
 
     for span in spans {
         let span_len = span.content.len();
 
         if (current_width + span_len) as u16 > width {
             current_width = 0;
-            ret.push(Spans::default());
+            ret.push(Line::default());
         }
 
         current_width += span_len;
-        ret.last_mut().unwrap().0.push(span);
+        ret.last_mut().unwrap().spans.push(span);
     }
 
     ret

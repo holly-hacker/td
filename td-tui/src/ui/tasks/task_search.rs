@@ -40,8 +40,8 @@ impl Component for TaskSearchBarComponent {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &crate::ui::AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
     ) {

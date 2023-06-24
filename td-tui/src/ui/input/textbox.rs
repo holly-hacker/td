@@ -1,4 +1,4 @@
-use tui::widgets::Paragraph;
+use ratatui::widgets::Paragraph;
 use tui_input::Input;
 
 use crate::{
@@ -69,8 +69,8 @@ impl Default for TextBoxComponent {
 impl Component for TextBoxComponent {
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         _state: &AppState,
         _frame_storage: &FrameLocalStorage,
     ) {

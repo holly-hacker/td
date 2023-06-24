@@ -69,8 +69,8 @@ impl Component for ComponentCollection {
 
     fn render(
         &self,
-        frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-        area: tui::layout::Rect,
+        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        area: ratatui::layout::Rect,
         state: &crate::ui::AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
     ) {
@@ -106,8 +106,8 @@ mod tests {
     impl Component for TestComponent {
         fn render(
             &self,
-            _frame: &mut tui::Frame<tui::backend::CrosstermBackend<std::io::Stdout>>,
-            _area: tui::layout::Rect,
+            _frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+            _area: ratatui::layout::Rect,
             _state: &crate::ui::AppState,
             _frame_storage: &crate::ui::FrameLocalStorage,
         ) {
