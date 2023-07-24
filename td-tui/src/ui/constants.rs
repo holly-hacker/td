@@ -10,6 +10,7 @@ pub const NO_STYLE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const FG_WHITE: Style = Style {
@@ -17,6 +18,7 @@ pub const FG_WHITE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const FG_LIGHT: Style = Style {
@@ -24,6 +26,7 @@ pub const FG_LIGHT: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const FG_DIM: Style = Style {
@@ -31,6 +34,7 @@ pub const FG_DIM: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const FG_GREEN: Style = Style {
@@ -38,6 +42,7 @@ pub const FG_GREEN: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const FG_RED: Style = Style {
@@ -45,6 +50,7 @@ pub const FG_RED: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const BOLD: Style = Style {
@@ -52,6 +58,7 @@ pub const BOLD: Style = Style {
     bg: None,
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const ITALIC: Style = Style {
@@ -59,6 +66,7 @@ pub const ITALIC: Style = Style {
     bg: None,
     add_modifier: Modifier::ITALIC,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const TEXT: Style = Style {
@@ -66,6 +74,7 @@ pub const TEXT: Style = Style {
     bg: Some(Color::Black),
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const TEXT_INVERTED: Style = Style {
@@ -73,6 +82,7 @@ pub const TEXT_INVERTED: Style = Style {
     bg: Some(Color::White),
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const SETTINGS_HEADER: Style = Style {
@@ -80,6 +90,7 @@ pub const SETTINGS_HEADER: Style = Style {
     bg: None,
     add_modifier: Modifier::UNDERLINED,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const STARTED_TASK: Style = Style {
@@ -87,6 +98,7 @@ pub const STARTED_TASK: Style = Style {
     bg: None,
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const COMPLETED_TASK: Style = Style {
@@ -94,6 +106,7 @@ pub const COMPLETED_TASK: Style = Style {
     bg: None,
     add_modifier: Modifier::ITALIC.union(Modifier::CROSSED_OUT),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 /// The style for unselected list items
@@ -102,6 +115,7 @@ pub const LIST_STYLE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 /// The style for selected list items
@@ -110,12 +124,14 @@ pub const LIST_HIGHLIGHT_STYLE: Style = Style {
     bg: Some(ACCENT_COLOR),
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 pub const LIST_HIGHLIGHT_STYLE_DISABLED: Style = Style {
     fg: Some(Color::Black),
     bg: Some(Color::DarkGray),
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 /// The style for unselected tabs
@@ -124,6 +140,7 @@ pub const TAB_STYLE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 /// The style for selected tabs
@@ -132,6 +149,7 @@ pub const TAB_HIGHLIGHT_STYLE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 /// The style for a textbox without background
@@ -140,6 +158,7 @@ pub const TEXTBOX_STYLE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 /// The style for a textbox with a background
@@ -148,6 +167,7 @@ pub const TEXTBOX_STYLE_BG: Style = Style {
     bg: Some(Color::DarkGray),
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const KEYBINDS_TEXT_ACTIVE: Style = Style {
@@ -155,6 +175,7 @@ pub const KEYBINDS_TEXT_ACTIVE: Style = Style {
     bg: None,
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const KEYBINDS_TEXT_INACTIVE: Style = Style {
@@ -162,6 +183,7 @@ pub const KEYBINDS_TEXT_INACTIVE: Style = Style {
     bg: None,
     add_modifier: Modifier::empty(),
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const KEYBINDS_CHAR_ACTIVE: Style = Style {
@@ -169,6 +191,7 @@ pub const KEYBINDS_CHAR_ACTIVE: Style = Style {
     bg: None,
     add_modifier: Modifier::BOLD,
     sub_modifier: Modifier::empty(),
+    underline_color: None,
 };
 
 pub const KEYBINDS_CHAR_INACTIVE: Style = KEYBINDS_TEXT_INACTIVE;

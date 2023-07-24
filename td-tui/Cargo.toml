@@ -14,5 +14,5 @@ predicates = { version = "3", default-features = false }
 td-lib = { path = "../td-lib" }
 td-util = { path = "../td-util" }
 textwrap = { version = "0.16", default-features = false }
-ratatui = "0.21"
+ratatui = "0.22"
 tui-input = "0.7"
