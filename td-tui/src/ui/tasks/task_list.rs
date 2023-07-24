@@ -267,119 +267,130 @@ impl Component for TaskList {
                 }
 
                 // take our own input
-                if KEYBIND_TASK_MARK_STARTED.is_match(key) {
-                    state.database.modify(|db| {
-                        let task = &mut db[tasks[task_index].id()];
-                        if task.time_started.is_none() {
-                            task.time_started = Some(
-                                OffsetDateTime::now_local()
-                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                            );
-                        } else {
-                            task.time_started = None;
-                        }
-                    });
-
-                    true
-                } else if KEYBIND_TASK_MARK_DONE.is_match(key) {
-                    state.database.modify(|db| {
-                        let task = &mut db[tasks[task_index].id()];
-                        if task.time_completed.is_none() {
-                            task.time_completed = Some(
-                                OffsetDateTime::now_local()
-                                    .unwrap_or_else(|_| OffsetDateTime::now_utc()),
-                            );
-                        } else {
-                            task.time_completed = None;
-                        }
-                    });
-
-                    true
-                } else if KEYBIND_TASK_NEW.is_match(key) {
-                    self.modals[self.create_task_modal].open();
-                    true
-                } else if KEYBIND_TASK_RENAME.is_match(key) {
-                    self.modals[self.rename_task_modal]
-                        .open_with_text(tasks[task_index].title.clone());
-                    true
-                } else if KEYBIND_TASK_DELETE.is_match(key) {
-                    self.modals[self.delete_task_modal].open(true);
-
-                    true
-                } else if KEYBIND_TASK_ADD_TAG.is_match(key) {
-                    if !tasks.is_empty() {
-                        // add tag to currently selected task
-                        self.modals[self.new_tag_modal].open();
-                    }
-
-                    true
-                } else if KEYBIND_TASK_ADD_DEPENDENCY.is_match(key) {
-                    let modal = &mut self.modals[self.search_box_depend_on];
-                    Self::open_add_dependency_dialog(modal, state, task_index, &tasks);
-                    true
-                } else if KEYBIND_TASK_EDIT.is_match(key) {
-                    self.modals[self.edit_modal].open(vec![
-                        KEYBIND_TASK_RENAME.clone(),
-                        KEYBIND_TASK_DELETE.clone(),
-                        KEYBIND_TASK_ADD_DEPENDENCY.clone(),
-                        KEYBIND_TASK_ADD_TAG.clone(),
-                    ]);
-                    true
-                } else if KEYBIND_TASK_TOGGLE_SEARCH.is_match(key) {
-                    state.filter_search = !state.filter_search;
-
-                    // if we are turning *on* search, focus the search bar
-                    if state.filter_search {
-                        self.set_focus(TaskListFocus::SearchBar);
-                    }
-
-                    true
-                } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
-                    // handle kb navigation
-
-                    if key == UpDownExtendedKey::Up && task_index == 0 && state.filter_search {
-                        self.set_focus(TaskListFocus::SearchBar);
-                        return true;
-                    }
-
-                    let TaskListFocus::Task(task_index) = &mut self.focus else {unreachable!();};
-
-                    match key {
-                        UpDownExtendedKey::Up => {
-                            *task_index = task_index.saturating_sub(1);
-                            true
-                        }
-                        UpDownExtendedKey::Down => {
-                            if !tasks.is_empty() && *task_index != tasks.len() - 1 {
-                                *task_index += 1;
+                // start by checking actions that require a task to present
+                let handled_by_task = if !tasks.is_empty() {
+                    if KEYBIND_TASK_MARK_STARTED.is_match(key) {
+                        state.database.modify(|db| {
+                            let task = &mut db[tasks[task_index].id()];
+                            if task.time_started.is_none() {
+                                task.time_started = Some(
+                                    OffsetDateTime::now_local()
+                                        .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                                );
+                            } else {
+                                task.time_started = None;
                             }
-                            true
-                        }
-                        UpDownExtendedKey::PageUp => {
-                            *task_index = task_index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
-                            true
-                        }
-                        UpDownExtendedKey::PageDown => {
-                            if !tasks.is_empty() && *task_index != tasks.len() - 1 {
-                                *task_index += Self::SCROLL_PAGE_UP_DOWN;
-                                *task_index = (*task_index).min(tasks.len() - 1);
+                        });
+
+                        true
+                    } else if KEYBIND_TASK_MARK_DONE.is_match(key) {
+                        state.database.modify(|db| {
+                            let task = &mut db[tasks[task_index].id()];
+                            if task.time_completed.is_none() {
+                                task.time_completed = Some(
+                                    OffsetDateTime::now_local()
+                                        .unwrap_or_else(|_| OffsetDateTime::now_utc()),
+                                );
+                            } else {
+                                task.time_completed = None;
                             }
-                            true
+                        });
+
+                        true
+                    } else if KEYBIND_TASK_RENAME.is_match(key) {
+                        self.modals[self.rename_task_modal]
+                            .open_with_text(tasks[task_index].title.clone());
+                        true
+                    } else if KEYBIND_TASK_DELETE.is_match(key) {
+                        self.modals[self.delete_task_modal].open(true);
+
+                        true
+                    } else if KEYBIND_TASK_ADD_TAG.is_match(key) {
+                        if !tasks.is_empty() {
+                            // add tag to currently selected task
+                            self.modals[self.new_tag_modal].open();
                         }
-                        UpDownExtendedKey::Home => {
-                            *task_index = 0;
-                            true
-                        }
-                        UpDownExtendedKey::End => {
-                            if !tasks.is_empty() && *task_index != tasks.len() - 1 {
-                                *task_index = tasks.len() - 1;
-                            }
-                            true
-                        }
+
+                        true
+                    } else if KEYBIND_TASK_ADD_DEPENDENCY.is_match(key) {
+                        let modal = &mut self.modals[self.search_box_depend_on];
+                        Self::open_add_dependency_dialog(modal, state, task_index, &tasks);
+                        true
+                    } else if KEYBIND_TASK_EDIT.is_match(key) {
+                        self.modals[self.edit_modal].open(vec![
+                            KEYBIND_TASK_RENAME.clone(),
+                            KEYBIND_TASK_DELETE.clone(),
+                            KEYBIND_TASK_ADD_DEPENDENCY.clone(),
+                            KEYBIND_TASK_ADD_TAG.clone(),
+                        ]);
+                        true
+                    } else {
+                        false
                     }
                 } else {
                     false
-                }
+                };
+
+                // if the input wasn't handled by a task, check the other keybinds
+                handled_by_task
+                    || if KEYBIND_TASK_NEW.is_match(key) {
+                        self.modals[self.create_task_modal].open();
+                        true
+                    } else if KEYBIND_TASK_TOGGLE_SEARCH.is_match(key) {
+                        state.filter_search = !state.filter_search;
+
+                        // if we are turning *on* search, focus the search bar
+                        if state.filter_search {
+                            self.set_focus(TaskListFocus::SearchBar);
+                        }
+
+                        true
+                    } else if let Some(key) = KEYBIND_CONTROLS_LIST_NAV_EXT.get_match(key) {
+                        // handle kb navigation
+
+                        if key == UpDownExtendedKey::Up && task_index == 0 && state.filter_search {
+                            self.set_focus(TaskListFocus::SearchBar);
+                            return true;
+                        }
+
+                        let TaskListFocus::Task(task_index) = &mut self.focus else {unreachable!();};
+
+                        match key {
+                            UpDownExtendedKey::Up => {
+                                *task_index = task_index.saturating_sub(1);
+                                true
+                            }
+                            UpDownExtendedKey::Down => {
+                                if !tasks.is_empty() && *task_index != tasks.len() - 1 {
+                                    *task_index += 1;
+                                }
+                                true
+                            }
+                            UpDownExtendedKey::PageUp => {
+                                *task_index = task_index.saturating_sub(Self::SCROLL_PAGE_UP_DOWN);
+                                true
+                            }
+                            UpDownExtendedKey::PageDown => {
+                                if !tasks.is_empty() && *task_index != tasks.len() - 1 {
+                                    *task_index += Self::SCROLL_PAGE_UP_DOWN;
+                                    *task_index = (*task_index).min(tasks.len() - 1);
+                                }
+                                true
+                            }
+                            UpDownExtendedKey::Home => {
+                                *task_index = 0;
+                                true
+                            }
+                            UpDownExtendedKey::End => {
+                                if !tasks.is_empty() && *task_index != tasks.len() - 1 {
+                                    *task_index = tasks.len() - 1;
+                                }
+                                true
+                            }
+                        }
+                    } else {
+                        false
+                    }
             }
         }
     }
