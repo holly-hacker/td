@@ -75,18 +75,29 @@ impl AppState {
     ) -> Result<(), Box<dyn Error>> {
         let mut root_component = LayoutRoot::new();
 
-        loop {
+        'main_loop: loop {
             let mut frame_storage = FrameLocalStorage::default();
             root_component.pre_render(self, &mut frame_storage);
 
             terminal.draw(|f| root_component.render(f, f.size(), self, &frame_storage))?;
 
-            if let Event::Key(key) = event::read()? {
+            // while loop so we only check for key-down events, not key-up
+            while let Event::Key(key) = event::read()? {
+                // if key even is release, don't use it as input
+                match key.kind {
+                    event::KeyEventKind::Press => (),
+                    event::KeyEventKind::Repeat => (),
+                    event::KeyEventKind::Release => continue,
+                };
+
                 _ = root_component.process_input(key, self, &frame_storage);
 
                 if self.should_exit {
-                    break;
+                    break 'main_loop;
                 }
+
+                // we handled an actionable key event, exit out of the input loop
+                break;
             }
         }
 
