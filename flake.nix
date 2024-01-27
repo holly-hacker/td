@@ -8,7 +8,7 @@
   outputs = inputs@{ flake-parts, ... }:
     let
       mkTd = { rustPlatform, lib, ... }: rustPlatform.buildRustPackage {
-        version = "0.1.0";
+        version = "dev-0.1.0";
         name = "td";
         src = builtins.path {
           path = ./.;
@@ -16,7 +16,7 @@
         cargoLock.lockFile = ./Cargo.lock;
 
         meta = {
-          description = " A WIP graph-based TUI TODO app. ";
+          description = "A WIP graph-based TUI TODO app.";
           homepage = "https://github.com/holly-hacker/td";
           license = lib.licenses.bsd2;
           platforms = lib.platforms.unix;
@@ -25,7 +25,7 @@
       };
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-linux" ];
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
 
       perSystem = { pkgs, system, self', ... }: {
         _module.args.pkgs = import inputs.nixpkgs {
