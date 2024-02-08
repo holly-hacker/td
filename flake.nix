@@ -8,7 +8,7 @@
   outputs = inputs@{ flake-parts, ... }:
     let
       mkTd = { rustPlatform, lib, ... }: rustPlatform.buildRustPackage {
-        version = "dev-0.1.0";
+        version = "0.1.0-dev";
         name = "td";
         src = builtins.path {
           path = ./.;
