@@ -49,7 +49,7 @@ impl Component for TaskPage {
 
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,

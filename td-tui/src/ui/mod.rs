@@ -196,7 +196,7 @@ pub trait Component: Downcast {
     /// Render the component and its children to the given area.
     fn render(
         &self,
-        frame: &mut Frame<CrosstermBackend<Stdout>>,
+        frame: &mut Frame,
         area: Rect,
         state: &AppState,
         frame_storage: &FrameLocalStorage,
@@ -248,7 +248,7 @@ impl Component for LayoutRoot {
 
     fn render(
         &self,
-        frame: &mut Frame<CrosstermBackend<Stdout>>,
+        frame: &mut Frame,
         area: Rect,
         state: &AppState,
         frame_storage: &FrameLocalStorage,

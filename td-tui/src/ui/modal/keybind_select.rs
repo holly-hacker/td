@@ -65,7 +65,7 @@ impl Component for KeybindSelectModal {
 
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         _state: &crate::ui::AppState,
         _frame_storage: &crate::ui::FrameLocalStorage,

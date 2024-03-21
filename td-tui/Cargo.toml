@@ -8,11 +8,11 @@ name = "td"
 path = "src/main.rs"
 
 [dependencies]
-crossterm = "0.26"
+crossterm = "0.27"
 downcast-rs = "1.2"
 predicates = { version = "3", default-features = false }
 td-lib = { path = "../td-lib" }
 td-util = { path = "../td-util" }
 textwrap = { version = "0.16", default-features = false }
-ratatui = "0.22"
-tui-input = "0.7"
+ratatui = "0.26"
+tui-input = "0.8"

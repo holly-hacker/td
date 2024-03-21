@@ -1,9 +1,8 @@
-use std::{collections::HashSet, io::Stdout};
+use std::collections::HashSet;
 
 use crossterm::event::KeyEvent;
 use predicates::prelude::*;
 use ratatui::{
-    backend::CrosstermBackend,
     layout::Rect,
     text::{Line, Span},
     widgets::{List, ListItem, ListState},
@@ -184,7 +183,7 @@ impl Component for TaskList {
 
     fn render(
         &self,
-        frame: &mut Frame<CrosstermBackend<Stdout>>,
+        frame: &mut Frame,
         area: Rect,
         state: &AppState,
         frame_storage: &crate::ui::FrameLocalStorage,

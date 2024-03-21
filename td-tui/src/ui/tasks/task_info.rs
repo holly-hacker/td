@@ -14,7 +14,7 @@ pub struct TaskInfoDisplay;
 impl Component for TaskInfoDisplay {
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         state: &AppState,
         frame_storage: &FrameLocalStorage,

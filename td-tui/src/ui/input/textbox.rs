@@ -69,7 +69,7 @@ impl Default for TextBoxComponent {
 impl Component for TextBoxComponent {
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         _state: &AppState,
         _frame_storage: &FrameLocalStorage,

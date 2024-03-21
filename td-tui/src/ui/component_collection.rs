@@ -69,7 +69,7 @@ impl Component for ComponentCollection {
 
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         state: &crate::ui::AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
@@ -106,7 +106,7 @@ mod tests {
     impl Component for TestComponent {
         fn render(
             &self,
-            _frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+            _frame: &mut ratatui::Frame,
             _area: ratatui::layout::Rect,
             _state: &crate::ui::AppState,
             _frame_storage: &crate::ui::FrameLocalStorage,

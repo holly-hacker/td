@@ -48,7 +48,7 @@ impl KeybindList {
 impl Component for KeybindList {
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         _state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,

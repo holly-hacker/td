@@ -11,7 +11,7 @@ pub struct DirtyIndicator;
 impl Component for DirtyIndicator {
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         state: &super::AppState,
         _frame_storage: &super::FrameLocalStorage,

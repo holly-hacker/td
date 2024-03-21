@@ -49,7 +49,7 @@ impl Component for TabLayout {
 
     fn render(
         &self,
-        frame: &mut ratatui::Frame<ratatui::backend::CrosstermBackend<std::io::Stdout>>,
+        frame: &mut ratatui::Frame,
         area: ratatui::layout::Rect,
         state: &super::AppState,
         frame_storage: &super::FrameLocalStorage,
@@ -64,8 +64,7 @@ impl Component for TabLayout {
             .iter()
             .enumerate()
             .map(|(i, v)| format!("{v} [{}]", i + 1))
-            .map(Line::from)
-            .collect();
+            .map(Line::from);
         let tabs = Tabs::new(titles)
             .select(self.index)
             .style(TAB_STYLE)

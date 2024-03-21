@@ -1,8 +1,5 @@
-use std::io::Stdout;
-
 use crossterm::event::KeyEvent;
 use ratatui::{
-    backend::CrosstermBackend,
     layout::Rect,
     widgets::{Block, Borders, Clear},
     Frame,
@@ -63,7 +60,7 @@ impl Component for TextInputModal {
 
     fn render(
         &self,
-        frame: &mut Frame<CrosstermBackend<Stdout>>,
+        frame: &mut Frame,
         area: Rect,
         state: &AppState,
         frame_storage: &crate::ui::FrameLocalStorage,
