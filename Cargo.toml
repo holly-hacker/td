@@ -1,2 +1,3 @@
 [workspace]
 members = ["td-tui", "td-util", "td-lib"]
+resolver = "2"
