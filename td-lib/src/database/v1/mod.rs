@@ -15,7 +15,7 @@ use self::file_model::*;
 pub struct Database {
     /// The graph of tasks in this database.
     ///
-    /// This uses a StableDiGraph to keep a stable order, which means insertions and removals will
+    /// This uses a `StableDiGraph` to keep a stable order, which means insertions and removals will
     /// not cause large changes to the database file.
     pub(crate) graph: StableDiGraph<Task, TaskDependency>,
 

@@ -11,7 +11,7 @@ use crate::utils::wrap_spans;
 pub struct KeybindList;
 
 impl KeybindList {
-    pub fn get_spans(frame_storage: &super::FrameLocalStorage) -> Vec<Span> {
+    pub fn get_spans(frame_storage: &super::FrameLocalStorage) -> Vec<Span<'_>> {
         let keybinds = &frame_storage.current_keybinds;
         let mut spans = vec![];
 

@@ -12,6 +12,7 @@ use ratatui::{
 };
 use tui_input::InputRequest;
 
+#[allow(unused)]
 pub trait RectExt {
     /// Creates a new rect with the given width, starting at the same origin.
     fn take_x(self, amount: u16) -> Self;

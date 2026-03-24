@@ -85,7 +85,7 @@ impl TaskList {
         tasks
     }
 
-    fn task_to_span(&self, state: &AppState, task: &Task) -> Line {
+    fn task_to_span(&self, state: &AppState, task: &Task) -> Line<'_> {
         let mut spans = vec![];
 
         let dependents_count = state.database.get_inverse_dependencies(task.id()).count();
@@ -147,7 +147,7 @@ impl Component for TaskList {
             TaskListFocus::SearchBar => {
                 // select top-most task if possible. it's better than having none selected
                 let task_list = self.get_task_list(global_state);
-                frame_storage.selected_task_id = task_list.get(0).map(|x| x.id().clone());
+                frame_storage.selected_task_id = task_list.first().map(|x| x.id().clone());
 
                 // NOTE: there should never be an open modal with the searchbar selected, but this
                 // makes sure that they would work if it happened regardless.
@@ -352,7 +352,9 @@ impl Component for TaskList {
                             return true;
                         }
 
-                        let TaskListFocus::Task(task_index) = &mut self.focus else {unreachable!();};
+                        let TaskListFocus::Task(task_index) = &mut self.focus else {
+                            unreachable!();
+                        };
 
                         match key {
                             UpDownExtendedKey::Up => {

@@ -12,10 +12,7 @@ pub struct CollectionKey<T: Component> {
 
 impl<T: Component> Clone for CollectionKey<T> {
     fn clone(&self) -> Self {
-        Self {
-            index: self.index,
-            data: self.data,
-        }
+        *self
     }
 }
 impl<T: Component> Copy for CollectionKey<T> {}
@@ -33,7 +30,7 @@ impl ComponentCollection {
         self.components.push(my_box);
         CollectionKey {
             index: self.components.len() - 1,
-            data: PhantomData::default(),
+            data: Default::default(),
         }
     }
 }
