@@ -1,4 +1,4 @@
-use ratatui::widgets::Paragraph;
+use ratatui::{layout::Position, widgets::Paragraph};
 use tui_input::Input;
 
 use crate::{
@@ -82,7 +82,10 @@ impl Component for TextBoxComponent {
         frame.render_widget(paragraph, area);
 
         if self.focused {
-            frame.set_cursor(area.x + self.input.visual_cursor() as u16, area.y);
+            frame.set_cursor_position(Position::new(
+                area.x + self.input.visual_cursor() as u16,
+                area.y,
+            ));
         }
     }
 

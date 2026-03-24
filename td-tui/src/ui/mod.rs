@@ -79,7 +79,7 @@ impl AppState {
             let mut frame_storage = FrameLocalStorage::default();
             root_component.pre_render(self, &mut frame_storage);
 
-            terminal.draw(|f| root_component.render(f, f.size(), self, &frame_storage))?;
+            terminal.draw(|f| root_component.render(f, f.area(), self, &frame_storage))?;
 
             // while loop so we only check for key-down events, not key-up
             while let Event::Key(key) = event::read()? {

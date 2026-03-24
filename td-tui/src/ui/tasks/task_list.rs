@@ -224,7 +224,7 @@ impl Component for TaskList {
 
         // if needed, render popups
         self.modals
-            .render(frame, frame.size(), state, frame_storage);
+            .render(frame, frame.area(), state, frame_storage);
     }
 
     fn process_input(

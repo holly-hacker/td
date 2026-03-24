@@ -1,4 +1,5 @@
 use ratatui::{
+    layout::Position,
     text::{Line, Span},
     widgets::Paragraph,
 };
@@ -99,7 +100,7 @@ impl Component for MultilineTextBoxComponent {
         if self.focused {
             let (cursor_x, cursor_y) = Self::get_text_position(self.input.cursor(), &text_wrapped);
 
-            frame.set_cursor(area.x + cursor_x, area.y + cursor_y);
+            frame.set_cursor_position(Position::new(area.x + cursor_x, area.y + cursor_y));
         }
     }
 
